@@ -1,0 +1,19 @@
+{
+  "name": "yahivo-store",
+  "version": "0.1.0",
+  "private": true,
+  "description": "YAHIVO hoodie storefront with admin, fulfilment, tax settings and AI shopping assistant. Local only — not deployed.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning --env-file-if-exists=.env server.mjs",
+    "check": "node scripts/check.mjs",
+    "test": "node --disable-warning=ExperimentalWarning --test tests/*.test.mjs",
+    "test:e2e": "node --disable-warning=ExperimentalWarning tests/e2e.mjs"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "*"
+  }
+}

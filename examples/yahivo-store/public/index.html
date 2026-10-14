@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0d0d">
+<!--HEAD-->
+<link rel="icon" href="/img/favicon-64.png" type="image/png">
+<link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap">
+<link rel="stylesheet" href="/css/styles.css">
+<script type="module" src="/js/app.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div id="sample-banner" class="sample-banner" hidden></div>
+<header class="site-header">
+  <div class="wrap header-row">
+    <button class="icon-btn menu-btn" id="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <a href="/" class="logo" data-link aria-label="YAHIVO home"><span id="logo-slot">YAHIVO</span></a>
+    <nav class="main-nav" aria-label="Main">
+      <a href="/shop" data-link>Shop all</a>
+      <a href="/shop?new=1" data-link>New</a>
+      <a href="/size-guide" data-link>Size guide</a>
+      <a href="/faq" data-link>Help</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="search-btn" aria-label="Search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+      </button>
+      <a href="/cart" class="icon-btn cart-btn" data-link aria-label="Cart">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1.2 12H6.2z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+        <span class="cart-count" id="cart-count" hidden>0</span>
+      </a>
+    </div>
+  </div>
+  <form class="search-bar wrap" id="search-bar" role="search" action="/search" hidden>
+    <label for="search-input" class="sr-only">Search hoodies</label>
+    <input id="search-input" name="q" type="search" placeholder="Search hoodies, colours, styles" maxlength="80" autocomplete="off">
+    <button class="btn btn-small" type="submit">Search</button>
+  </form>
+  <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile" hidden>
+    <a href="/shop" data-link>Shop all hoodies</a>
+    <a href="/shop?new=1" data-link>New arrivals</a>
+    <a href="/size-guide" data-link>Size guide</a>
+    <a href="/shipping-returns" data-link>Shipping &amp; returns</a>
+    <a href="/track" data-link>Track an order</a>
+    <a href="/faq" data-link>FAQs</a>
+    <a href="/contact" data-link>Contact</a>
+  </nav>
+</header>
+
+<main id="main" tabindex="-1">
+  <div class="wrap page-loading" aria-busy="true"><div class="spinner" aria-hidden="true"></div><p>Loading…</p></div>
+  <noscript><div class="wrap notice">This store needs JavaScript enabled to browse and order.</div></noscript>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-grid">
+    <div>
+      <p class="footer-logo" id="footer-logo">YAHIVO</p>
+      <div class="social" id="footer-social"></div>
+    </div>
+    <nav aria-label="Shop">
+      <h2>Shop</h2>
+      <a href="/shop" data-link>All hoodies</a>
+      <a href="/shop?new=1" data-link>New arrivals</a>
+      <a href="/size-guide" data-link>Size guide</a>
+    </nav>
+    <nav aria-label="Help">
+      <h2>Help</h2>
+      <a href="/faq" data-link>FAQs</a>
+      <a href="/shipping-returns" data-link>Shipping &amp; returns</a>
+      <a href="/track" data-link>Track an order</a>
+      <a href="/contact" data-link>Contact</a>
+      <a href="/privacy" data-link>Privacy policy</a>
+    </nav>
+  </div>
+  <p class="wrap footer-legal" id="footer-legal"></p>
+</footer>
+
+<button class="chat-launcher" id="chat-launcher" aria-controls="chat-panel" aria-expanded="false">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>
+  <span>Ask</span>
+</button>
+<section class="chat-panel" id="chat-panel" role="dialog" aria-modal="false" aria-labelledby="chat-title" hidden>
+  <header class="chat-head">
+    <div>
+      <h2 id="chat-title">YAHIVO assistant</h2>
+      <p class="chat-mode" id="chat-mode"></p>
+    </div>
+    <button class="icon-btn" id="chat-close" aria-label="Close assistant">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </header>
+  <div class="chat-log" id="chat-log" aria-live="polite"></div>
+  <div class="chat-suggest" id="chat-suggest"></div>
+  <form class="chat-form" id="chat-form">
+    <label for="chat-input" class="sr-only">Ask a question</label>
+    <input id="chat-input" maxlength="1000" autocomplete="off" placeholder="Ask about sizes, delivery, colours…">
+    <button class="btn btn-small" type="submit">Send</button>
+  </form>
+</section>
+
+<div class="toast-region" id="toasts" role="status" aria-live="polite"></div>
+</body>
+</html>

@@ -46,7 +46,7 @@ On first start the database is created with **sample products** (clearly bannere
 | `YAHIVO_SEED` | Catalogue loaded into a new, empty database: `yahivo` (default, your real products), `sample` (test data) or `none`. |
 | `TRUST_PROXY=1` | Only behind a reverse proxy: use `X-Forwarded-For` for rate limiting. |
 
-Keep secrets in environment variables or an uncommitted `.env` that your process manager loads. They are only read on the server and never sent to the browser.
+Keep secrets in a private `.env` file: copy `.env.example` to `.env` and fill it in. `npm start` loads it automatically, and it is git-ignored. Never paste keys into chat, email or the website files. If a key is ever exposed, revoke it at the provider and create a new one. They are only read on the server and never sent to the browser.
 
 ## Checks and tests
 

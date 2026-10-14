@@ -1,0 +1,123 @@
+{
+  "_comment": "SAMPLE CATALOG for layout and checkout testing. Names, prices and stock are placeholders, not real YAHIVO data. Replace every product, then set sampleData=false in store.json.",
+  "products": [
+    {
+      "slug": "sample-core-pullover",
+      "name": "Core Pullover Hoodie",
+      "style": "Pullover",
+      "description": "Sample product. Replace with the real product description.",
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 199,
+      "sizes": ["S", "M", "L", "XL", "XXL"],
+      "colors": [
+        { "name": "Black", "hex": "#151515", "stock": { "S": 4, "M": 10, "L": 8, "XL": 3, "XXL": 0 } },
+        { "name": "Bone", "hex": "#E6DFD0", "stock": { "S": 2, "M": 6, "L": 5, "XL": 1, "XXL": 1 } }
+      ],
+      "images": [],
+      "featured": true,
+      "isNew": false,
+      "createdAt": "2026-01-10",
+      "sample": true
+    },
+    {
+      "slug": "sample-oversized-hoodie",
+      "name": "Oversized Hoodie",
+      "style": "Oversized",
+      "description": "Sample product. Replace with the real product description.",
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 249,
+      "sizes": ["S", "M", "L", "XL"],
+      "colors": [
+        { "name": "Washed Grey", "hex": "#8E8C88", "stock": { "S": 3, "M": 7, "L": 4, "XL": 2 } },
+        { "name": "Olive", "hex": "#5B6142", "stock": { "S": 0, "M": 3, "L": 2, "XL": 0 } }
+      ],
+      "images": [],
+      "featured": true,
+      "isNew": true,
+      "createdAt": "2026-09-20",
+      "sample": true
+    },
+    {
+      "slug": "sample-zip-up-hoodie",
+      "name": "Zip-Up Hoodie",
+      "style": "Zip-up",
+      "description": "Sample product. Replace with the real product description.",
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 229,
+      "sizes": ["S", "M", "L", "XL", "XXL"],
+      "colors": [
+        { "name": "Navy", "hex": "#1C2541", "stock": { "S": 5, "M": 5, "L": 5, "XL": 4, "XXL": 2 } },
+        { "name": "Black", "hex": "#151515", "stock": { "S": 1, "M": 0, "L": 3, "XL": 2, "XXL": 1 } }
+      ],
+      "images": [],
+      "featured": true,
+      "isNew": false,
+      "createdAt": "2026-03-02",
+      "sample": true
+    },
+    {
+      "slug": "sample-heavy-pullover",
+      "name": "Heavy Pullover Hoodie",
+      "style": "Pullover",
+      "description": "Sample product. Replace with the real product description.",
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 279,
+      "sizes": ["M", "L", "XL"],
+      "colors": [
+        { "name": "Burgundy", "hex": "#5E1A24", "stock": { "M": 4, "L": 6, "XL": 2 } }
+      ],
+      "images": [],
+      "featured": false,
+      "isNew": true,
+      "createdAt": "2026-10-01",
+      "sample": true
+    },
+    {
+      "slug": "sample-cropped-hoodie",
+      "name": "Cropped Hoodie",
+      "style": "Cropped",
+      "description": "Sample product. Replace with the real product description.",
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 179,
+      "sizes": ["XS", "S", "M", "L"],
+      "colors": [
+        { "name": "Bone", "hex": "#E6DFD0", "stock": { "XS": 3, "S": 4, "M": 2, "L": 0 } },
+        { "name": "Signal Orange", "hex": "#FF5A1F", "stock": { "XS": 1, "S": 2, "M": 3, "L": 1 } }
+      ],
+      "images": [],
+      "featured": false,
+      "isNew": true,
+      "createdAt": "2026-08-15",
+      "sample": true
+    },
+    {
+      "slug": "sample-essential-zip",
+      "name": "Essential Zip Hoodie",
+      "style": "Zip-up",
+      "description": "Sample product. Replace with the real product description.",
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 159,
+      "sizes": ["S", "M", "L", "XL"],
+      "colors": [
+        { "name": "Washed Grey", "hex": "#8E8C88", "stock": { "S": 0, "M": 0, "L": 0, "XL": 0 } }
+      ],
+      "images": [],
+      "featured": false,
+      "isNew": false,
+      "createdAt": "2025-11-30",
+      "sample": true
+    }
+  ]
+}

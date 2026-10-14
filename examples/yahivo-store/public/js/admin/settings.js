@@ -86,9 +86,9 @@ const screens = {
     title: 'Payments',
     note: 'Card details are never collected or stored by this site. Card payments run through Stripe Checkout only when STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET are set on the server (see README).',
     html: `<section class="panel"><h2>Payment provider</h2><p><strong>${esc(env.payments)}</strong></p></section>
-      <section class="panel"><h2>Pay-later order requests (placeholder)</h2>
-        <p>When enabled, customers can submit an order without paying online. You then contact them to confirm and arrange payment, and mark the order “Paid” once you receive the money. Turn this off when a payment provider is live, unless you want to keep offering it.</p>
-        <label class="check"><input type="checkbox" name="manualOrderRequests" ${s.payments.manualOrderRequests ? 'checked' : ''}> Allow order requests without online payment</label>
+      <section class="panel"><h2>Cash on delivery</h2>
+        <p>When enabled, customers order without paying online and pay in cash when the order is delivered. Confirm each order with the customer, make sure whoever delivers collects the exact total, and mark the order “Paid” once you have the cash.</p>
+        <label class="check"><input type="checkbox" name="manualOrderRequests" ${s.payments.manualOrderRequests ? 'checked' : ''}> Offer cash on delivery</label>
       </section>`,
     read: (f) => ({ manualOrderRequests: f.manualOrderRequests.checked }),
   }),

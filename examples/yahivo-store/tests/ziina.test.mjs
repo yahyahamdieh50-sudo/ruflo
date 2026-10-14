@@ -122,18 +122,19 @@ test('real YAHIVO catalogue: Shopify details, owner sizes/stock, hidden third-pa
   store.close();
 });
 
-test('real store settings: pay-later orders with Dubai AED 15 / rest of UAE AED 25 delivery', async () => {
+test('real store settings: cash-on-delivery orders with Dubai AED 15 / rest of UAE AED 25 delivery', async () => {
   const { quote, placeOrder, paymentMethods } = await import('../lib/checkout.mjs');
   const store = new Store(':memory:', { seed: 'yahivo' });
   const settings = store.getSettings();
   const methods = paymentMethods(settings, {});
-  assert.deepEqual(methods.map((m) => m.id), ['manual'], 'no online payment — order now, pay later');
+  assert.deepEqual(methods.map((m) => m.id), ['manual'], 'cash on delivery only');
   const items = [{ slug: 'yahivo-crown-graphic-oversized-hoodie', color: 'Klein Blue', size: 'L', qty: 2 }];
   const ctx = { settings, products: store.listProducts(), methods };
   const dubai = quote({ items, country: 'United Arab Emirates', region: 'Dubai' }, ctx);
   assert.deepEqual([dubai.totals.items, dubai.totals.delivery, dubai.totals.tax, dubai.totals.total], [307.04, 15, 0, 322.04]);
   const sharjah = quote({ items, country: 'United Arab Emirates', region: 'Sharjah' }, ctx);
   assert.equal(sharjah.totals.delivery, 25);
+  assert.deepEqual(settings.delivery.couriers.map((c) => c.id), ['imile'], 'iMile is the cash-on-delivery courier');
   const placed = placeOrder({ items, paymentMethod: 'manual', expectedTotal: 322.04,
     customer: { name: 'Real Buyer', email: 'r@example.com', phone: '+971 50 111 0000', country: 'United Arab Emirates', region: 'Dubai', city: 'JBR', address1: 'Tower 1' } }, { store, settings, methods });
   const order = store.getOrder(placed.id);

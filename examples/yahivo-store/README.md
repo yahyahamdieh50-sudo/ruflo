@@ -43,6 +43,7 @@ On first start the database is created with **sample products** (clearly bannere
 | `NGENIUS_API_BASE`, `NGENIUS_REALM` | Live API base URL and realm name from your Network International onboarding. |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Turn on card payments via Stripe Checkout. |
 | `YAHIVO_DB` | Database file path (default `data/yahivo.db`). |
+| `YAHIVO_UPLOADS` | Folder for photos uploaded in the admin (default `public/uploads`). Point it at the persistent disk in production. |
 | `YAHIVO_SEED` | Catalogue loaded into a new, empty database: `yahivo` (default, your real products), `sample` (test data) or `none`. |
 | `TRUST_PROXY=1` | Only behind a reverse proxy: use `X-Forwarded-For` for rate limiting. |
 
@@ -73,6 +74,8 @@ npm run test:e2e   # Playwright/Chromium: admin setup, desktop + mobile purchase
 
 ### Courier workflow (manual, no courier API connected)
 
+The store is set up with **iMile** as its cash-on-delivery courier. iMile collects the cash from the customer and pays it to you weekly. Mark the order **Paid** once the payout arrives.
+
 1. Admin → Delivery & couriers: add each courier you use. A tracking link such as `https://courier.example/track?n={tracking}` is optional.
 2. When packing an order, set the status to **Preparing**, then **Packed**, and record the packing notes.
 3. When the courier collects it, choose the courier, enter the tracking number and set **Handed to courier**. The app requires a courier before this status.
@@ -95,7 +98,7 @@ npm run test:e2e   # Playwright/Chromium: admin setup, desktop + mobile purchase
 
 ## Payments
 
-**Current setup: order now, pay later.** No online payment is active. Customers place an *order request*; nothing is charged. You contact them to confirm and arrange payment, then mark the order **Paid** in Admin → Orders once you have the money. Delivery: **Dubai AED 15**, **rest of UAE AED 25** (Admin → Delivery to change).
+**Current setup: cash on delivery.** No online payment is active. Customers place the order and pay cash when it's delivered; nothing is charged online. The confirmation page shows the exact amount to have ready. You confirm the order with the customer, make sure whoever delivers collects the cash, then mark the order **Paid** in Admin → Orders. Delivery: **Dubai AED 15**, **rest of UAE AED 25** (Admin → Delivery to change).
 
 - **No payment provider is configured**, so no payment method is shown to customers.
 - **Ziina (your provider):**
@@ -109,7 +112,7 @@ npm run test:e2e   # Playwright/Chromium: admin setup, desktop + mobile purchase
   2. Set `NGENIUS_API_KEY` and `NGENIUS_OUTLET_REF`. Without `NGENIUS_API_BASE` the store uses the **sandbox** (`https://api-gateway.sandbox.ngenius-payments.com`). For live payments, set `NGENIUS_API_BASE` (and `NGENIUS_REALM`, if your onboarding pack specifies one) to the values Network International gives you.
   3. Customers are sent to Network International's hosted payment page. On return, the server asks N-Genius for the payment state and marks the order **Paid** only if the provider confirms payment **and** the amount matches. The redirect itself is never trusted. Admin → order → *Check payment with Network International* re-checks manually.
   4. ⚠️ This adapter was built from the public N-Genius docs and tested against a mocked provider, **not** a real sandbox account. Make a sandbox payment (and a failed one) before going live. If a customer abandons the payment page, the order stays *Awaiting payment* with its stock reserved; cancel it in the admin to release the stock.
-- **Placeholder:** Admin → Payments → *"Allow order requests without online payment"*. Customers can then submit an order that is clearly labelled as unpaid. You contact them, arrange payment, and mark the order *Paid*. Turn this off when a real provider is live.
+- **Cash on delivery:** Admin → Payments → *"Offer cash on delivery"* (on). Customers order without paying online and pay cash on delivery. Mark the order *Paid* once the cash is collected. You can keep it on alongside an online provider.
 - **Stripe (card payments):**
   1. Create a Stripe account for the business and complete activation for the UAE / AED.
   2. Set `STRIPE_SECRET_KEY` (use test mode `sk_test_…` first).
@@ -122,12 +125,50 @@ npm run test:e2e   # Playwright/Chromium: admin setup, desktop + mobile purchase
 - **Demo mode (current):** rule-based answers built only from your store data, labelled *"Demo mode"* in the chat. It recommends in-stock hoodies by style, colour, size and budget, and answers delivery, packing, tax, returns and sizing questions from your settings. Anything else gets *"I'm not confident…"* plus your contact channel. It cannot see orders and points customers to Track order.
 - **Live mode:** set `ANTHROPIC_API_KEY`, run `npm install` once in this folder (installs the optional `@anthropic-ai/sdk`), then restart. The model receives only the verified store data and is instructed not to invent details, stock, dates, tax treatment or order status. Product links are checked against your real catalog. If the API fails, the assistant falls back to demo answers.
 
-## Deploying later (not done)
+## Going live on Render at shop.yahivo.com (not done yet)
 
-1. Host on any Node 22 server or container (for example a small VPS, Render, Railway or Fly.io) with a **persistent disk** for `data/` and `public/uploads/`.
-2. Put it behind HTTPS (most hosts do this automatically). Set `SITE_URL=https://your-domain`, `HOST=0.0.0.0`, and `TRUST_PROXY=1` if behind a proxy.
-3. **Custom domain:** keep www.yahivo.com as it is if you want the sites separate. Use a subdomain such as `shop.yahivo.com`: add the DNS record your host gives you (usually a `CNAME` to the host) at your domain registrar, then add the domain in the host's dashboard.
-4. Back up `data/yahivo.db` regularly.
+Chosen setup: [Render](https://render.com) **Starter** web service plus a 1 GB persistent disk, about US$7.25/month. Check Render's pricing page for the current price. The store stays separate from www.yahivo.com. Only one DNS record is added for the `shop` subdomain.
+
+**1. Before you start:** merge the pull request so the store is on your `main` branch. Pick an admin password of 12+ characters and keep it private.
+
+**2. Create the service** (Render dashboard → **New** → **Web Service** → connect GitHub → `yahyahamdieh50-sudo/ruflo`):
+
+| Setting | Value |
+|---|---|
+| Branch | `main` |
+| Root Directory | `examples/yahivo-store` |
+| Runtime | Node |
+| Build Command | `npm install` |
+| Start Command | `npm start` |
+| Instance Type | **Starter** (free instances can't have a disk, and orders would be lost) |
+
+**3. Add a disk** (Advanced → **Add Disk**): name `data`, mount path `/var/data`, size 1 GB.
+
+**4. Environment variables** (Advanced → **Add Environment Variable**):
+
+| Key | Value |
+|---|---|
+| `NODE_VERSION` | `22` |
+| `HOST` | `0.0.0.0` |
+| `SITE_URL` | `https://shop.yahivo.com` |
+| `TRUST_PROXY` | `1` |
+| `YAHIVO_DB` | `/var/data/yahivo.db` |
+| `YAHIVO_UPLOADS` | `/var/data/uploads` |
+| `ADMIN_PASSWORD` | your admin password (never share it or put it in GitHub) |
+
+Leave out the payment and AI keys until you're ready. The store runs with cash on delivery and the demo assistant.
+
+**5. Deploy:** click **Create Web Service**. After a few minutes, check it at the `…onrender.com` address Render shows. Log in at `/admin` and check the products, delivery fees and policies.
+
+**6. Connect shop.yahivo.com:**
+1. In Render: service → **Settings** → **Custom Domains** → **Add** → `shop.yahivo.com`. Render shows a target such as `yahivo-store.onrender.com`.
+2. Where yahivo.com's DNS is managed (for example Shopify admin → **Settings → Domains → yahivo.com → Domain settings → Edit DNS settings**), add one record: type **CNAME**, name `shop`, value = the Render target. Don't change any other record. www.yahivo.com keeps working as before.
+3. Back in Render, click **Verify**. Render issues the HTTPS certificate automatically. This can take from a few minutes up to an hour.
+
+**Good to know**
+- With a disk attached, each update has a short restart (seconds) instead of a seamless switch-over.
+- Back up regularly. Render keeps disk snapshots (see your service's **Disks** page), and you can also download the orders CSV from the admin each week.
+- Updates: anything merged into `main` deploys automatically.
 
 ## Launch checklist
 
@@ -143,10 +184,12 @@ Admin → Dashboard shows this live. Today, everything below is still needed fro
 - [ ] **Original product photos** (current ones are low-resolution crops)
 - [ ] **Decide on the 9 hidden designs** (third-party brands/characters/portrait). Keep licences on file for the 3 you published
 - [ ] **Delivery estimates** you can promise (optional)
-- [ ] **Couriers** you use (for the manual tracking workflow)
+- [x] Courier: **iMile** for cash on delivery. The tracking link uses parcelsapp.com because iMile's own site has no public link format. Estimated cost is about AED 10 per parcel plus about 3% COD fee (minimum AED 2), paid out weekly, from third-party sources.
+- [x] iMile account opened (2026-10-14)
+- [ ] **Get iMile's rate card and weekly cash payout terms** in writing, from the app or your account manager. Change the tracking link in Admin → Delivery if iMile gives you its own
 - [ ] **Packing options**, fees and materials
 - [ ] **Tax settings**, confirmed with your accountant. Nothing is assumed; tax is off.
-- [ ] **Ziina**: finish account verification, create an API key, set `ZIINA_API_TOKEN`, run a test payment, then set `ZIINA_LIVE=1`. Decide whether to keep the pay-later placeholder.
+- [ ] **Ziina**: finish account verification, create an API key, set `ZIINA_API_TOKEN`, run a test payment, then set `ZIINA_LIVE=1`. Optional: cash on delivery works without it.
 - [ ] Optional: opening hours
 - [ ] **Social profile URLs** for Facebook, Instagram and TikTok. The links you sent are the Facebook Accounts Centre/settings page and the Instagram home page, not profile pages, so they were not added. TikTok was not provided.
 - [ ] **Review the adapted policies**, and have the privacy page legally reviewed

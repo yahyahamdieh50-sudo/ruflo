@@ -71,7 +71,7 @@ const TYPES = {
 };
 
 /** Serve a file from `root` if it exists. Returns false when not found. Blocks traversal. */
-export function serveStatic(req, res, root, pathname) {
+export function serveStatic(req, res, root, pathname, { immutable = false } = {}) {
   let rel;
   try { rel = decodeURIComponent(pathname); } catch { return false; }
   if (rel.includes('\0')) return false;
@@ -82,7 +82,7 @@ export function serveStatic(req, res, root, pathname) {
   if (!st.isFile()) return false;
   const ext = path.extname(file).toLowerCase();
   if (!TYPES[ext]) return false;
-  const isUpload = rel.startsWith('/uploads/');
+  const isUpload = immutable || rel.startsWith('/uploads/');
   res.writeHead(200, {
     'Content-Type': TYPES[ext],
     'Content-Length': st.size,

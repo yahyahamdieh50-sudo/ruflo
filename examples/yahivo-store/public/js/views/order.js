@@ -44,7 +44,7 @@ export default async function order(main, ctx) {
       <p>Order number <strong>${esc(o.number)}</strong> · placed ${esc(new Date(o.createdAt).toLocaleString())}</p>
       ${placed ? '<p class="muted small">Save this page’s link to check your order status later, or use Track order with your order number and email.</p>' : ''}
       ${paymentNote}
-      ${manual && !paid ? `<div class="notice"><h3>No payment has been taken</h3><p>This is an order request. ${esc(settings.brand)} will contact you to confirm the order and arrange payment.</p></div>` : ''}
+      ${manual && !paid ? `<div class="notice"><h3>Pay cash on delivery</h3><p>Please have <strong>${esc(money(o.totals.total))}</strong> ready in cash when your order arrives. No payment has been taken online. ${esc(settings.brand)} will contact you to confirm your order.</p></div>` : ''}
       ${paid ? '<div class="notice"><strong>Payment received.</strong></div>' : ''}
       ${!manual && o.paymentStatus === 'awaiting_payment' ? '<div class="notice notice-warn"><strong>Payment not confirmed yet.</strong> If you just paid, refresh this page in a minute. Please don’t pay again — contact us if this message stays.</div>' : ''}
       ${o.paymentStatus === 'failed' ? '<div class="notice notice-err"><strong>Payment failed.</strong> You have not been charged. Please contact us to complete your order.</div>' : ''}

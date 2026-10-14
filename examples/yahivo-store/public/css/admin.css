@@ -1,4 +1,13 @@
-body.admin { background: #f5f4f0; }
+/* The admin keeps a light, high-contrast work theme; the storefront is dark. */
+body.admin {
+  --bg: #f5f4f0; --fg: #0d0d0d; --surface: #ffffff; --surface-2: #ece9e2; --muted: #5f5b53;
+  --line: #d6d0c3; --line-strong: #9a948a; --gold: #8a6a2f; --on-gold: #ffffff; --photo: #ffffff;
+  --ok: #1d6b35; --warn: #8a4b00; --err: #b3261e; --ink: #0d0d0d; --accent: #8a6a2f;
+  --display: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; --body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light; background: #f5f4f0; color: #0d0d0d;
+}
+body.admin label { text-transform: none; letter-spacing: normal; color: var(--fg); font-weight: 600; font-size: .9rem; }
+body.admin h1, body.admin h2, body.admin h3 { font-weight: 700; }
 .admin-top { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px var(--gutter); background: var(--ink); color: #fff; }
 .admin-top .logo { font-size: 1.3rem; color: #fff; margin: 0; display: flex; align-items: center; gap: 10px; }
 .admin-top .logo img { height: 20px; width: auto; }

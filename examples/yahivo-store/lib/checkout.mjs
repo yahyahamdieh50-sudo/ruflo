@@ -17,7 +17,7 @@ export function paymentMethods(settings, { stripe = false, ngenius = false, ziin
   if (ngenius) out.push({ id: 'ngenius', label: ziina ? 'Card payment (Network International)' : 'Card payment', description: 'You will be redirected to Network International’s secure payment page. Card details never touch this site.' });
   if (stripe) out.push({ id: 'stripe', label: ngenius || ziina ? 'Card payment (Stripe)' : 'Card payment', description: 'You will be redirected to Stripe’s secure checkout. Card details never touch this site.' });
   if (settings.payments.manualOrderRequests) {
-    out.push({ id: 'manual', label: 'Order request — pay later', description: 'No payment is taken online. The store will contact you to confirm the order and arrange payment.' });
+    out.push({ id: 'manual', label: 'Cash on delivery', description: 'Pay in cash when your order is delivered. Nothing is charged online. The store will contact you to confirm your order.' });
   }
   return out;
 }

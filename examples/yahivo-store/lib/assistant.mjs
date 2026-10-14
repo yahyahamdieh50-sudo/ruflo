@@ -31,6 +31,7 @@ export function knowledge(settings, products) {
     shippingPolicy: settings.policies.shipping ?? 'not published',
     sizeGuide: settings.sizeGuide.rows.length ? settings.sizeGuide : 'measurements not published',
     faqs: settings.faqs,
+    cashOnDelivery: settings.payments.manualOrderRequests === true,
     contact: contactLine(settings),
   };
 }
@@ -96,7 +97,7 @@ export function demoReply(message, { settings, products }) {
     };
   }
   if (has(message, ['pay', 'card', 'cash', 'apple pay'])) {
-    return { reply: 'Available payment options are shown at checkout. Only methods that are actually set up are listed there.' };
+    return { reply: settings.payments.manualOrderRequests ? 'You can pay cash on delivery: nothing is charged online, and you pay the total shown at checkout when your order arrives. All available payment options are listed at checkout.' : 'Available payment options are shown at checkout. Only methods that are actually set up are listed there.' };
   }
   if (has(message, ['contact', 'email', 'phone', 'whatsapp', 'call', 'human', 'someone'])) {
     return { reply: contact, links: [{ href: '/contact', label: 'Contact page' }] };

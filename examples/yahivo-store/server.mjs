@@ -27,7 +27,8 @@ import { anonymiseOrder, ordersCsv } from './lib/fulfilment.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(here, 'public');
-const UPLOADS = path.join(PUBLIC, 'uploads');
+// Admin photo uploads; point YAHIVO_UPLOADS at a persistent disk in production.
+const UPLOADS = path.resolve(process.env.YAHIVO_UPLOADS || path.join(PUBLIC, 'uploads'));
 
 export function createApp({ store = new Store(), env = process.env, fetchImpl = fetch } = {}) {
   const auth = new AdminAuth(store, env.ADMIN_PASSWORD);
@@ -279,6 +280,7 @@ export function createApp({ store = new Store(), env = process.env, fetchImpl = 
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' });
       return res.end(adminShell);
     }
+    if (p.startsWith('/uploads/') && serveStatic(req, res, UPLOADS, p.slice('/uploads'.length), { immutable: true })) return undefined;
     if (p !== '/' && !p.endsWith('.html') && serveStatic(req, res, PUBLIC, p)) return undefined;
     if (/\.[a-z0-9]{2,5}$/i.test(p)) { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found'); }
     const settings = store.getSettings();

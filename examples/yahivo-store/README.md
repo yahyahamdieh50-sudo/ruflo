@@ -43,6 +43,7 @@ On first start the database is created with **sample products** (clearly bannere
 | `NGENIUS_API_BASE`, `NGENIUS_REALM` | Live API base URL and realm name from your Network International onboarding. |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Turn on card payments via Stripe Checkout. |
 | `YAHIVO_DB` | Database file path (default `data/yahivo.db`). |
+| `YAHIVO_UPLOADS` | Folder for photos uploaded in the admin (default `public/uploads`). Point it at the persistent disk in production. |
 | `YAHIVO_SEED` | Catalogue loaded into a new, empty database: `yahivo` (default, your real products), `sample` (test data) or `none`. |
 | `TRUST_PROXY=1` | Only behind a reverse proxy: use `X-Forwarded-For` for rate limiting. |
 
@@ -122,12 +123,50 @@ npm run test:e2e   # Playwright/Chromium: admin setup, desktop + mobile purchase
 - **Demo mode (current):** rule-based answers built only from your store data, labelled *"Demo mode"* in the chat. It recommends in-stock hoodies by style, colour, size and budget, and answers delivery, packing, tax, returns and sizing questions from your settings. Anything else gets *"I'm not confident…"* plus your contact channel. It cannot see orders and points customers to Track order.
 - **Live mode:** set `ANTHROPIC_API_KEY`, run `npm install` once in this folder (installs the optional `@anthropic-ai/sdk`), then restart. The model receives only the verified store data and is instructed not to invent details, stock, dates, tax treatment or order status. Product links are checked against your real catalog. If the API fails, the assistant falls back to demo answers.
 
-## Deploying later (not done)
+## Going live on Render at shop.yahivo.com (not done yet)
 
-1. Host on any Node 22 server or container (for example a small VPS, Render, Railway or Fly.io) with a **persistent disk** for `data/` and `public/uploads/`.
-2. Put it behind HTTPS (most hosts do this automatically). Set `SITE_URL=https://your-domain`, `HOST=0.0.0.0`, and `TRUST_PROXY=1` if behind a proxy.
-3. **Custom domain:** keep www.yahivo.com as it is if you want the sites separate. Use a subdomain such as `shop.yahivo.com`: add the DNS record your host gives you (usually a `CNAME` to the host) at your domain registrar, then add the domain in the host's dashboard.
-4. Back up `data/yahivo.db` regularly.
+Chosen setup: [Render](https://render.com) **Starter** web service plus a 1 GB persistent disk, about US$7.25/month. Check Render's pricing page for the current price. The store stays separate from www.yahivo.com. Only one DNS record is added for the `shop` subdomain.
+
+**1. Before you start:** merge the pull request so the store is on your `main` branch. Pick an admin password of 12+ characters and keep it private.
+
+**2. Create the service** (Render dashboard → **New** → **Web Service** → connect GitHub → `yahyahamdieh50-sudo/ruflo`):
+
+| Setting | Value |
+|---|---|
+| Branch | `main` |
+| Root Directory | `examples/yahivo-store` |
+| Runtime | Node |
+| Build Command | `npm install` |
+| Start Command | `npm start` |
+| Instance Type | **Starter** (free instances can't have a disk, and orders would be lost) |
+
+**3. Add a disk** (Advanced → **Add Disk**): name `data`, mount path `/var/data`, size 1 GB.
+
+**4. Environment variables** (Advanced → **Add Environment Variable**):
+
+| Key | Value |
+|---|---|
+| `NODE_VERSION` | `22` |
+| `HOST` | `0.0.0.0` |
+| `SITE_URL` | `https://shop.yahivo.com` |
+| `TRUST_PROXY` | `1` |
+| `YAHIVO_DB` | `/var/data/yahivo.db` |
+| `YAHIVO_UPLOADS` | `/var/data/uploads` |
+| `ADMIN_PASSWORD` | your admin password (never share it or put it in GitHub) |
+
+Leave out the payment and AI keys until you're ready. The store runs with pay-later orders and the demo assistant.
+
+**5. Deploy:** click **Create Web Service**. After a few minutes, check it at the `…onrender.com` address Render shows. Log in at `/admin` and check the products, delivery fees and policies.
+
+**6. Connect shop.yahivo.com:**
+1. In Render: service → **Settings** → **Custom Domains** → **Add** → `shop.yahivo.com`. Render shows a target such as `yahivo-store.onrender.com`.
+2. Where yahivo.com's DNS is managed (for example Shopify admin → **Settings → Domains → yahivo.com → Domain settings → Edit DNS settings**), add one record: type **CNAME**, name `shop`, value = the Render target. Don't change any other record. www.yahivo.com keeps working as before.
+3. Back in Render, click **Verify**. Render issues the HTTPS certificate automatically. This can take from a few minutes up to an hour.
+
+**Good to know**
+- With a disk attached, each update has a short restart (seconds) instead of a seamless switch-over.
+- Back up regularly. Render keeps disk snapshots (see your service's **Disks** page), and you can also download the orders CSV from the admin each week.
+- Updates: anything merged into `main` deploys automatically.
 
 ## Launch checklist
 

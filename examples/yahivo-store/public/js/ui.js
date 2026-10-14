@@ -94,6 +94,20 @@ export const ICONS = {
   tiktok: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.6 2h-3.3v13.4a2.8 2.8 0 1 1-2-2.7V9.3a6.1 6.1 0 1 0 5.3 6.1V8.6a7.7 7.7 0 0 0 4.4 1.4V6.7a4.4 4.4 0 0 1-4.4-4.4z"/></svg>',
 };
 
+const WA_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg>';
+const PHONE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg>';
+
+/** WhatsApp + call buttons from store contact settings. `message` pre-fills the WhatsApp chat. */
+export function contactButtons(contact, { message } = {}) {
+  const out = [];
+  if (contact?.whatsapp) {
+    const text = message ? `?text=${encodeURIComponent(message)}` : '';
+    out.push(`<a href="https://wa.me/${esc(contact.whatsapp.replace(/\D/g, ''))}${text}" target="_blank" rel="noopener noreferrer">${WA_ICON}<span>WhatsApp</span></a>`);
+  }
+  if (contact?.phone) out.push(`<a href="tel:${esc(contact.phone.replace(/[^\d+]/g, ''))}">${PHONE_ICON}<span>${esc(contact.phone)}</span></a>`);
+  return out.join('');
+}
+
 export function socialLinks(social) {
   return ['instagram', 'tiktok', 'facebook'].filter((k) => social?.[k])
     .map((k) => `<a href="${esc(social[k])}" target="_blank" rel="noopener noreferrer">${ICONS[k]}<span>${k === 'tiktok' ? 'TikTok' : k[0].toUpperCase() + k.slice(1)}</span></a>`).join('');

@@ -86,7 +86,7 @@ npm run test:e2e   # Playwright/Chromium: admin setup, desktop + mobile purchase
 - **Published (11):** YAHIVO Crown Graphic (Black / Klein Blue / White), "Mine" and "Yours" couples hoodies, Pink Ride, Script Pink / Apricot, Oversize Fleeced Hoodie ×2 (YAHIVO logo) and Brooklyn Varsity are available. Arabic Typography, Coffee Graphic and Logo Oversized Fleece are shown as sold out.
 - **Hidden (12), until you confirm you hold the rights:** these designs use third-party brands or characters (Nike, adidas, Toyota, BMW, Maserati, Pink Panther, Bugs Bunny, Tom & Jerry, the Simpsons, Joker) or a real person's portrait. Selling them without a licence is a legal risk, and payment providers generally prohibit it. Admin → Products → tick **Published** to show one.
 - **Not imported:** the 5 T-shirts (Essential Cotton ×3, Rebel Rabbit, Unisex Oversized) because this store sells hoodies only.
-- **Sizes:** S, M, L, XL on all live hoodies (confirmed by you). **Stock** isn't tracked yet: live hoodies can be ordered and the product page says availability is confirmed after ordering. Enter quantities per size in Admin → Products (tick *Track*) when you have them. Sold-out hoodies stay sold out.
+- **Sizes:** S, M, L, XL on all live hoodies (confirmed by you). **Stock:** 10 per size for every available colour (from you). It goes down automatically with each order and back up if you cancel. Adjust it any time in Admin → Products. Sold-out hoodies stay sold out.
 - **Not in the recording, so left empty:** descriptions and materials.
 - **Photos** are cropped from the recording (about 400px). Upload the original files for sharp images. Brooklyn Varsity and Logo Oversized Fleece had no visible photo.
 - **Logo:** your logo is used in the header, footer, favicon and social share image (`public/img/logo-*.png`).
@@ -135,7 +135,8 @@ Admin → Dashboard shows this live. Today, everything below is still needed fro
 - [x] YAHIVO logo
 - [x] Sizes (S–XL) on live hoodies
 - [x] Delivery zones and fees (Dubai AED 15, rest of UAE AED 25)
-- [ ] **Stock quantities** per size (not tracked yet)
+- [x] Stock: 10 per size per available colour
+- [x] Contact: +971 52 586 6612 (phone and WhatsApp)
 - [ ] **Original product photos** (current ones are low-resolution crops), plus descriptions and materials
 - [ ] **Decide on the 12 hidden designs** (third-party brands/characters/portrait)
 - [ ] **Delivery estimates** you can promise (optional)
@@ -143,7 +144,7 @@ Admin → Dashboard shows this live. Today, everything below is still needed fro
 - [ ] **Packing options**, fees and materials
 - [ ] **Tax settings**, confirmed with your accountant. Nothing is assumed; tax is off.
 - [ ] **Ziina**: finish account verification, create an API key, set `ZIINA_API_TOKEN`, run a test payment, then set `ZIINA_LIVE=1`. Decide whether to keep the pay-later placeholder.
-- [ ] **Contact details** (email, WhatsApp, phone, address, hours)
+- [ ] Optional: contact email, address and opening hours
 - [ ] **Social profile URLs** for Facebook, Instagram and TikTok. The links you sent are the Facebook Accounts Centre/settings page and the Instagram home page, not profile pages, so they were not added. TikTok was not provided.
 - [ ] **Shipping policy**, **returns/exchanges policy**, privacy contact email, and a legal review of the privacy page
 - [ ] **Size guide measurements** (chest, length, sleeve for S–XL)

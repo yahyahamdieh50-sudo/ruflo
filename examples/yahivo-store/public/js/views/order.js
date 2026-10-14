@@ -1,6 +1,6 @@
 // Order confirmation / status (/order/:token) and order lookup (/track).
 import { api, ApiError } from '../api.js';
-import { esc, money, showFieldErrors } from '../ui.js';
+import { contactButtons, esc, money, showFieldErrors } from '../ui.js';
 import { lineMedia, summaryRows } from './shared.js';
 
 const FLOW = [['received', 'Received'], ['preparing', 'Preparing'], ['packed', 'Packed'], ['handed_to_courier', 'Handed to courier'], ['delivered', 'Delivered']];
@@ -64,7 +64,7 @@ export default async function order(main, ctx) {
         ${summaryRows(o, { final: true })}
         <p class="sum-note">Payment: ${esc(o.payment.label)}</p>
         ${o.tax?.registrationNumber ? `<p class="sum-note">Tax registration no. ${esc(o.tax.registrationNumber)}</p>` : ''}
-        <a class="btn btn-ghost btn-block" href="/contact" data-link>Questions? Contact us</a>
+        ${contactButtons(settings.contact) ? `<p class="sum-note">Questions about this order?</p><div class="social order-contact">${contactButtons(settings.contact, { message: `Hi YAHIVO, about my order ${o.number}` })}</div>` : '<a class="btn btn-ghost btn-block" href="/contact" data-link>Questions? Contact us</a>'}
       </aside>
     </div>`;
   return undefined;

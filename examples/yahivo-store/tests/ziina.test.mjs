@@ -90,6 +90,8 @@ test('Ziina failure cancels the order and releases stock', async () => {
   intent.fail = false;
 });
 
+const crownStock = (list) => list.find((p) => p.slug === 'yahivo-crown-graphic-oversized-hoodie').colors[0].stock;
+
 test('real YAHIVO catalogue: published items only, no invented sizes, sold-out status kept', async () => {
   const store = new Store(':memory:', { seed: 'yahivo' });
   const all = store.listProducts({ includeUnpublished: true });
@@ -98,7 +100,8 @@ test('real YAHIVO catalogue: published items only, no invented sizes, sold-out s
   assert.equal(published.length, 11);
   assert.ok(published.every((p) => p.sizes.join() === 'S,M,L,XL' && !p.sample), 'owner-confirmed sizes on live hoodies');
   assert.ok(all.filter((p) => !p.published).every((p) => p.sizes.length === 0), 'hidden designs untouched');
-  assert.ok(published.filter((p) => p.slug !== 'yahivo-coffee-graphic-oversized-hoodie').some((p) => p.colors.every((c) => c.stock === null)), 'stock not tracked until the owner enters it');
+  assert.deepEqual(crownStock(published), { S: 10, M: 10, L: 10, XL: 10 }, 'owner stock: 10 per size');
+  assert.equal(store.getSettings().contact.whatsapp, '+971 52 586 6612');
   assert.ok(!published.some((p) => /toyota|bmw|tom-jerry|drop-shoulder|tonal|portrait/.test(p.slug)), 'third-party/likeness items hidden');
   const crown = published.find((p) => p.slug === 'yahivo-crown-graphic-oversized-hoodie');
   assert.equal(crown.price, 153.52);

@@ -359,3 +359,5 @@ body.has-sticky-atc .chat-launcher { bottom: calc(84px + env(safe-area-inset-bot
 .card-media:has(img), .gallery-main:has(img) { background: #fff; }
 .cat-card .cat-photo { position: absolute; right: 8px; top: 8px; width: 96px; height: 96px; object-fit: contain; background: #fff; border-radius: 2px; }
 @media (min-width: 768px) { .cat-card .cat-photo { width: 120px; height: 120px; } }
+.order-contact { margin-top: 8px; }
+.order-contact a { color: var(--ink); }

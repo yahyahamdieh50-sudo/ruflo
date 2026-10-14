@@ -1,5 +1,5 @@
 {
-  "_comment": "YAHIVO catalogue transcribed from the owner's screen recording of yahivo.com (2026-10-14). Names, prices (AED) and sold-out status are from the recording. Sizes S–XL confirmed by the owner for published hoodies (2026-10-14). Stock quantities are not tracked yet (owner will enter them); descriptions and materials were not shown, so they are empty. Products with published=false carry third-party brands/characters or a real person's likeness and are hidden until the owner confirms the rights. Photos are cropped from the recording (low resolution) — replace with originals.",
+  "_comment": "YAHIVO catalogue transcribed from the owner's screen recording of yahivo.com (2026-10-14). Names, prices (AED) and sold-out status are from the recording. Sizes S–XL confirmed by the owner for published hoodies (2026-10-14). Stock: 10 per size for every available colour (owner, 2026-10-14); descriptions and materials were not shown, so they are empty. Products with published=false carry third-party brands/characters or a real person's likeness and are hidden until the owner confirms the rights. Photos are cropped from the recording (low resolution) — replace with originals.",
   "products": [
     {
       "slug": "yahivo-crown-graphic-oversized-hoodie",
@@ -20,17 +20,32 @@
         {
           "name": "Black",
           "hex": "#111111",
-          "stock": null
+          "stock": {
+            "S": 10,
+            "M": 10,
+            "L": 10,
+            "XL": 10
+          }
         },
         {
           "name": "Klein Blue",
           "hex": "#3B1FD6",
-          "stock": null
+          "stock": {
+            "S": 10,
+            "M": 10,
+            "L": 10,
+            "XL": 10
+          }
         },
         {
           "name": "White",
           "hex": "#F4F4F2",
-          "stock": null
+          "stock": {
+            "S": 10,
+            "M": 10,
+            "L": 10,
+            "XL": 10
+          }
         }
       ],
       "images": [
@@ -75,7 +90,12 @@
         {
           "name": "Black",
           "hex": "#111111",
-          "stock": null
+          "stock": {
+            "S": 10,
+            "M": 10,
+            "L": 10,
+            "XL": 10
+          }
         }
       ],
       "images": [
@@ -109,7 +129,12 @@
         {
           "name": "Pink",
           "hex": "#F2A9C7",
-          "stock": null
+          "stock": {
+            "S": 10,
+            "M": 10,
+            "L": 10,
+            "XL": 10
+          }
         }
       ],
       "images": [
@@ -143,7 +168,12 @@
         {
           "name": "Pink",
           "hex": "#F5B3CC",
-          "stock": null
+          "stock": {
+            "S": 10,
+            "M": 10,
+            "L": 10,
+            "XL": 10
+          }
         }
       ],
       "images": [
@@ -177,7 +207,12 @@
         {
           "name": "Pink / Apricot",
           "hex": "#F2A9C7",
-          "stock": null
+          "stock": {
+            "S": 10,
+            "M": 10,
+            "L": 10,
+            "XL": 10
+          }
         }
       ],
       "images": [
@@ -211,7 +246,12 @@
         {
           "name": "Black",
           "hex": "#111111",
-          "stock": null
+          "stock": {
+            "S": 10,
+            "M": 10,
+            "L": 10,
+            "XL": 10
+          }
         }
       ],
       "images": [
@@ -245,7 +285,12 @@
         {
           "name": "Black",
           "hex": "#111111",
-          "stock": null
+          "stock": {
+            "S": 10,
+            "M": 10,
+            "L": 10,
+            "XL": 10
+          }
         }
       ],
       "images": [
@@ -279,7 +324,12 @@
         {
           "name": "Flower Gray",
           "hex": "#9C9C9A",
-          "stock": null
+          "stock": {
+            "S": 10,
+            "M": 10,
+            "L": 10,
+            "XL": 10
+          }
         }
       ],
       "images": [],

@@ -12,15 +12,17 @@ import { findForTracking, publicOrder, releaseStock, updateOrder, ORDER_STATUSES
 import { applySection, launchChecklist, publicSettings, SECTIONS } from './lib/settings.mjs';
 import { answer, assistantMode } from './lib/assistant.mjs';
 import { createCheckoutSession, stripeConfigured, verifyWebhook } from './lib/stripe.mjs';
+import { createNgeniusOrder, ngeniusConfigured, ngeniusStatus } from './lib/ngenius.mjs';
 import { routeMeta, robots, sitemap } from './lib/seo.mjs';
 import { clientIp, HttpError, readBody, readJson, securityHeaders, sendJson, serveStatic } from './lib/http.mjs';
 import { validateProduct, ValidationError } from './lib/validate.mjs';
+import { anonymiseOrder, ordersCsv } from './lib/fulfilment.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(here, 'public');
 const UPLOADS = path.join(PUBLIC, 'uploads');
 
-export function createApp({ store = new Store(), env = process.env } = {}) {
+export function createApp({ store = new Store(), env = process.env, fetchImpl = fetch } = {}) {
   const auth = new AdminAuth(store, env.ADMIN_PASSWORD);
   const limiter = new RateLimiter();
   const port = Number(env.PORT) || 4173;
@@ -32,7 +34,7 @@ export function createApp({ store = new Store(), env = process.env } = {}) {
   const stripe = () => stripeConfigured(env);
   const ctx = () => {
     const settings = store.getSettings();
-    return { settings, products: store.listProducts(), methods: paymentMethods(settings, { stripe: stripe() }) };
+    return { settings, products: store.listProducts(), methods: paymentMethods(settings, { stripe: stripe(), ngenius: ngeniusConfigured(env) }) };
   };
   const limit = (req, bucket, n, ms) => {
     if (!limiter.allow(`${bucket}:${clientIp(req)}`, n, ms)) throw new HttpError(429, 'Too many requests. Please wait a moment and try again.');
@@ -72,12 +74,18 @@ export function createApp({ store = new Store(), env = process.env } = {}) {
       const c = ctx();
       const placed = placeOrder(await readJson(req), { store, settings: c.settings, methods: c.methods });
       let redirectUrl = null;
-      if (placed.method === 'stripe') {
+      if (placed.method === 'stripe' || placed.method === 'ngenius') {
         const order = store.getOrder(placed.id);
         try {
-          redirectUrl = (await createCheckoutSession(order, { siteUrl, env })).url;
+          if (placed.method === 'stripe') redirectUrl = (await createCheckoutSession(order, { siteUrl, env, fetchImpl })).url;
+          else {
+            const ng = await createNgeniusOrder(order, { siteUrl, env, fetchImpl });
+            order.payment = { ...order.payment, providerRef: ng.reference };
+            store.saveOrder(order);
+            redirectUrl = ng.url;
+          }
         } catch (e) {
-          console.error('[stripe]', e.message);
+          console.error(`[${placed.method}]`, e.message);
           store.transaction(() => { releaseStock(store, order); order.status = 'cancelled'; order.paymentStatus = 'failed'; store.saveOrder(order); store.addEvent(order.id, { type: 'status', status: 'cancelled', note: 'Payment session could not be created.' }); });
           throw new HttpError(502, 'We could not start the secure payment. You have not been charged — please try again.');
         }
@@ -89,6 +97,33 @@ export function createApp({ store = new Store(), env = process.env } = {}) {
       const order = store.getOrderByToken(match[1]);
       if (!order) throw new HttpError(404, 'Order not found.');
       return sendJson(res, 200, { order: publicOrder(store, order) });
+    }
+    // Re-check payment with the provider (customer return page or admin). Never trusts the redirect.
+    if ((match = p.match(/^\/api\/orders\/([A-Za-z0-9_-]{10,64})\/verify-payment$/)) && m === 'POST') {
+      limit(req, 'verify', 20, 60_000);
+      const order = store.getOrderByToken(match[1]);
+      if (!order) throw new HttpError(404, 'Order not found.');
+      if (order.payment.method === 'ngenius' && ngeniusConfigured(env) && order.paymentStatus === 'awaiting_payment') {
+        let result;
+        try {
+          result = await ngeniusStatus(order, { env, fetchImpl });
+        } catch (e) {
+          console.error('[ngenius]', e.message);
+          throw new HttpError(502, 'We could not confirm your payment right now. Please refresh in a minute.');
+        }
+        if (result.status === 'paid') {
+          order.paymentStatus = 'paid';
+          store.saveOrder(order);
+          store.addEvent(order.id, { type: 'payment', note: `Payment confirmed by Network International (${result.states.join(', ')}).`, actor: 'ngenius' });
+        } else if (result.status === 'failed') {
+          order.paymentStatus = 'failed';
+          store.saveOrder(order);
+          store.addEvent(order.id, { type: 'payment', note: `Payment failed at Network International (${result.states.join(', ')}). Stock is still reserved — cancel the order to release it.`, actor: 'ngenius' });
+        } else if (result.status === 'mismatch') {
+          store.addEvent(order.id, { type: 'payment', note: 'Provider reported payment but the amount did not match the order total — check manually.', actor: 'ngenius' });
+        }
+      }
+      return sendJson(res, 200, { order: publicOrder(store, store.getOrder(order.id)) });
     }
     if (p === '/api/track' && m === 'POST') {
       limit(req, 'track', 10, 10 * 60_000);
@@ -146,10 +181,10 @@ export function createApp({ store = new Store(), env = process.env } = {}) {
       const { counts } = store.listOrders({ limit: 1 });
       const aiLive = (await assistantMode(env)) === 'live';
       return sendJson(res, 200, {
-        checklist: launchChecklist(settings, products, { stripe: stripe(), aiLive, adminPasswordSet: auth.enabled }),
+        checklist: launchChecklist(settings, products, { stripe: stripe() || ngeniusConfigured(env), aiLive, adminPasswordSet: auth.enabled }),
         orderCounts: counts,
         integrations: {
-          payments: stripe() ? 'Stripe configured (keys present — test a payment before launch)' : 'No payment provider configured',
+          payments: [ngeniusConfigured(env) && `Network International N-Genius configured (${env.NGENIUS_API_BASE ? 'custom API base' : 'SANDBOX'}) — run a test payment before launch`, stripe() && 'Stripe configured — run a test payment before launch'].filter(Boolean).join(' · ') || 'No payment provider configured',
           courier: 'Manual workflow — no courier API connected',
           assistant: aiLive ? 'Live (Claude)' : 'Demo mode',
         },
@@ -182,10 +217,30 @@ export function createApp({ store = new Store(), env = process.env } = {}) {
         return sendJson(res, 200, { ok: true });
       }
     }
-    if (p === '/api/admin/orders' && m === 'GET') {
-      const status = ORDER_STATUSES.includes(url.searchParams.get('status')) ? url.searchParams.get('status') : null;
-      const q = (url.searchParams.get('q') || '').slice(0, 60).replace(/[%_]/g, '');
-      return sendJson(res, 200, store.listOrders({ status, q }));
+    const orderFilter = () => ({
+      status: ORDER_STATUSES.includes(url.searchParams.get('status')) ? url.searchParams.get('status') : null,
+      q: (url.searchParams.get('q') || '').slice(0, 60).replace(/[%_]/g, ''),
+    });
+    if (p === '/api/admin/orders' && m === 'GET') return sendJson(res, 200, store.listOrders(orderFilter()));
+    if (p === '/api/admin/orders.csv' && m === 'GET') {
+      const { orders } = store.listOrders({ ...orderFilter(), limit: 10000 });
+      res.writeHead(200, {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="yahivo-orders-${new Date().toISOString().slice(0, 10)}.csv"`,
+        'Cache-Control': 'no-store',
+      });
+      return res.end(ordersCsv(orders));
+    }
+    if ((match = p.match(/^\/api\/admin\/orders\/(\d{1,9})\/anonymise$/)) && m === 'POST') {
+      let order;
+      try {
+        order = anonymiseOrder(store, Number(match[1]));
+      } catch (e) {
+        if (e.code === 'not_final') throw new HttpError(409, e.message);
+        throw e;
+      }
+      if (!order) throw new HttpError(404, 'Order not found.');
+      return sendJson(res, 200, { order, events: store.events(order.id) });
     }
     if ((match = p.match(/^\/api\/admin\/orders\/(\d{1,9})$/))) {
       const id = Number(match[1]);

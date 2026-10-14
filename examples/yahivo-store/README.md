@@ -14,7 +14,7 @@ The repository this lives in (`ruflo`) is an AI-orchestration toolkit. It has no
 | Server | Node.js ≥ 22.13, built-in `node:http` | No framework or npm install needed to run; small attack surface |
 | Database | Built-in `node:sqlite` (`data/yahivo.db`) | Transactions for stock and orders, a single file, easy to back up |
 | Frontend | Vanilla ES modules + CSS, no build step | Fast to load, nothing to compile |
-| Payments | Stripe Checkout (hosted page), **only when keys are set** | Card data never touches this server |
+| Payments | Network International N-Genius or Stripe Checkout (hosted pages), **only when keys are set** | Card data never touches this server |
 | AI assistant | Anthropic Claude via the official SDK, **only when `ANTHROPIC_API_KEY` is set** | Otherwise a clearly labelled demo mode |
 
 The folder is self-contained (`examples/yahivo-store/`). You can move it into its own repository at any time.
@@ -37,6 +37,8 @@ On first start the database is created with **sample products** (clearly bannere
 | `SITE_URL` | Public URL, e.g. `https://shop.yahivo.com`. Used for canonical/social links; `https://` also turns on secure cookies. |
 | `ANTHROPIC_API_KEY` | Turns the assistant from demo to live (see below). |
 | `YAHIVO_AI_MODEL` | Optional model override (default `claude-opus-5-5`). |
+| `NGENIUS_API_KEY`, `NGENIUS_OUTLET_REF` | Turn on card payments via Network International N-Genius (sandbox by default). |
+| `NGENIUS_API_BASE`, `NGENIUS_REALM` | Live API base URL and realm name from your Network International onboarding. |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Turn on card payments via Stripe Checkout. |
 | `YAHIVO_DB` | Database file path (default `data/yahivo.db`). |
 | `YAHIVO_SEED_SAMPLE=0` | Start with no sample products. |
@@ -48,8 +50,8 @@ Keep secrets in environment variables or an uncommitted `.env` that your process
 
 ```bash
 npm run check      # syntax, seed data, 500-line limit, no secret values in public/
-npm test           # 29 unit + API tests (in-memory DB)
-npm run test:e2e   # Playwright/Chromium: admin setup, desktop + mobile purchase, fulfilment, assistant
+npm test           # 36 unit + API tests (in-memory DB, mocked payment provider)
+npm run test:e2e   # Playwright/Chromium: admin setup, desktop + mobile purchase, fulfilment, slip/CSV/privacy, assistant
 ```
 
 ## What's included
@@ -61,7 +63,7 @@ npm run test:e2e   # Playwright/Chromium: admin setup, desktop + mobile purchase
 **Admin (`/admin`).**
 - **Dashboard:** order counts, integration status (what is and isn't connected) and the launch checklist.
 - **Products:** add, edit, hide or delete products; price; sizes; colours with swatches; stock per colour and size; photo upload (JPEG/PNG/WebP, checked by file signature, max 5 MB) or image URLs.
-- **Orders:** filter and search; status flow **Received → Preparing → Packed → Handed to courier → Delivered** (or **Cancelled**, which returns stock); courier and tracking number; packing notes; payment status; internal notes; full history.
+- **Orders:** filter and search; **Export CSV** for your courier or packing team (respects the current filter; contains customer addresses — keep it private); a printable **packing slip** per order (no prices; tick boxes for packer/checker); **Remove customer data** on delivered/cancelled orders for privacy requests (keeps items, totals and tax); status flow **Received → Preparing → Packed → Handed to courier → Delivered** (or **Cancelled**, which returns stock); courier and tracking number; packing notes; payment status; internal notes; full history.
 - **Delivery & couriers:** zones (country + areas such as emirates, fee, free-over, estimate) and couriers (name, tracking link template, phone, notes).
 - **Packing:** options with fees, customer description and internal materials.
 - **Tax:** name, rate, prices include or exclude tax, whether delivery and packing are taxable, registration number, and a **"confirmed by me/my accountant"** flag.
@@ -78,6 +80,11 @@ npm run test:e2e   # Playwright/Chromium: admin setup, desktop + mobile purchase
 ## Payments
 
 - **No payment provider is configured**, so no payment method is shown to customers.
+- **Network International N-Genius (UAE card acquirer, recommended for AED):**
+  1. Get an N-Genius Online merchant account from Network International. In the N-Genius portal, create a **Service Account API key** and note your **Outlet reference**.
+  2. Set `NGENIUS_API_KEY` and `NGENIUS_OUTLET_REF`. Without `NGENIUS_API_BASE` the store uses the **sandbox** (`https://api-gateway.sandbox.ngenius-payments.com`). For live payments, set `NGENIUS_API_BASE` (and `NGENIUS_REALM`, if your onboarding pack specifies one) to the values Network International gives you.
+  3. Customers are sent to Network International's hosted payment page. On return, the server asks N-Genius for the payment state and marks the order **Paid** only if the provider confirms payment **and** the amount matches. The redirect itself is never trusted. Admin → order → *Check payment with Network International* re-checks manually.
+  4. ⚠️ This adapter was built from the public N-Genius docs and tested against a mocked provider, **not** a real sandbox account. Make a sandbox payment (and a failed one) before going live. If a customer abandons the payment page, the order stays *Awaiting payment* with its stock reserved; cancel it in the admin to release the stock.
 - **Placeholder:** Admin → Payments → *"Allow order requests without online payment"*. Customers can then submit an order that is clearly labelled as unpaid. You contact them, arrange payment, and mark the order *Paid*. Turn this off when a real provider is live.
 - **Stripe (card payments):**
   1. Create a Stripe account for the business and complete activation for the UAE / AED.
@@ -108,7 +115,7 @@ Admin → Dashboard shows this live. Today, everything below is still needed fro
 - [ ] **Couriers** you use (for the manual tracking workflow)
 - [ ] **Packing options**, fees and materials
 - [ ] **Tax settings**, confirmed with your accountant. Nothing is assumed; tax is off.
-- [ ] **Payment provider** (Stripe keys or another provider). Decide whether to keep the pay-later placeholder.
+- [ ] **Payment provider**: Network International N-Genius keys (or Stripe), then a sandbox test payment. Decide whether to keep the pay-later placeholder.
 - [ ] **Contact details** (email, WhatsApp, phone, address, hours)
 - [ ] **Social profile URLs** for Facebook, Instagram and TikTok. The links you sent are the Facebook Accounts Centre/settings page and the Instagram home page, not profile pages, so they were not added. TikTok was not provided.
 - [ ] **Shipping policy**, **returns/exchanges policy**, privacy contact email, and a legal review of the privacy page

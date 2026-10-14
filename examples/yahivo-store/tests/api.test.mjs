@@ -222,3 +222,40 @@ test('assistant demo endpoint + input validation; stripe webhook disabled withou
   assert.equal((await call('/api/assistant', { method: 'POST', body: { messages: [{ role: 'user', content: 'x'.repeat(2000) }] } })).status, 400);
   assert.equal((await call('/api/stripe/webhook', { method: 'POST', body: {} })).status, 404);
 });
+
+test('courier/packing CSV export is admin-only and complete', async () => {
+  assert.equal((await call('/api/admin/orders.csv')).status, 401);
+  const r = await call('/api/admin/orders.csv?status=delivered', { admin: true });
+  assert.equal(r.status, 200);
+  assert.match(r.headers.get('content-type'), /text\/csv/);
+  assert.match(r.headers.get('content-disposition'), /attachment; filename="yahivo-orders-/);
+  const lines = r.text.replace(/^﻿/, '').trim().split('\r\n');
+  assert.equal(lines.length, 2, 'header + the one delivered order');
+  assert.match(lines[0], /"Order","Placed","Status"/);
+  assert.match(lines[1], /"YH-1001".*"Test Buyer".*"Tower 1, Flat 2".*"2 x Core Pullover Hoodie \(Black, M\)".*"Test Courier","AB 123"/);
+});
+
+test('customer data removal: only for finished orders, irreversible, keeps totals', async () => {
+  const items = [{ slug: 'sample-zip-up-hoodie', color: 'Navy', size: 'S', qty: 1 }];
+  const q = (await call('/api/quote', { method: 'POST', body: { items, country: 'United Arab Emirates', region: 'Dubai', packingId: 'standard' } })).json;
+  const open = await call('/api/orders', { method: 'POST', body: { items, customer, packingId: 'standard', paymentMethod: 'manual', expectedTotal: q.totals.total } });
+  const { orders } = (await call('/api/admin/orders', { admin: true })).json;
+  const openId = orders.find((o) => o.number === open.json.number).id;
+  assert.equal((await call(`/api/admin/orders/${openId}/anonymise`, { method: 'POST', body: {}, admin: true })).status, 409);
+
+  const deliveredId = orders.find((o) => o.number === 'YH-1001').id;
+  assert.equal((await call(`/api/admin/orders/${deliveredId}/anonymise`, { method: 'POST', body: {} })).status, 401);
+  const r = await call(`/api/admin/orders/${deliveredId}/anonymise`, { method: 'POST', body: {}, admin: true });
+  assert.equal(r.status, 200);
+  const o = r.json.order;
+  assert.equal(o.customer.name, '[removed]');
+  assert.equal(o.customer.phone, '[removed]');
+  assert.equal(o.customer.email, undefined);
+  assert.equal(o.email, `removed-${deliveredId}@invalid`);
+  assert.equal(o.fulfilment.packingNotes, null);
+  assert.equal(o.totals.total, 459.9, 'financial record kept');
+  assert.ok(r.json.events.some((e) => e.type === 'privacy'));
+  assert.equal((await call('/api/track', { method: 'POST', body: { number: 'YH-1001', email: 'buyer@example.com' } })).status, 404);
+  const csv = (await call('/api/admin/orders.csv?q=YH-1001', { admin: true })).text;
+  assert.doesNotMatch(csv, /Test Buyer|buyer@example\.com|Tower 1/);
+});

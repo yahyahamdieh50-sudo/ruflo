@@ -11,9 +11,10 @@ export class CheckoutConflict extends Error {
 }
 
 /** Payment methods are only listed once actually configured. */
-export function paymentMethods(settings, { stripe }) {
+export function paymentMethods(settings, { stripe = false, ngenius = false } = {}) {
   const out = [];
-  if (stripe) out.push({ id: 'stripe', label: 'Card payment', description: 'You will be redirected to Stripe’s secure checkout. Card details never touch this site.' });
+  if (ngenius) out.push({ id: 'ngenius', label: 'Card payment', description: 'You will be redirected to Network International’s secure payment page. Card details never touch this site.' });
+  if (stripe) out.push({ id: 'stripe', label: ngenius ? 'Card payment (Stripe)' : 'Card payment', description: 'You will be redirected to Stripe’s secure checkout. Card details never touch this site.' });
   if (settings.payments.manualOrderRequests) {
     out.push({ id: 'manual', label: 'Order request — pay later', description: 'No payment is taken online. The store will contact you to confirm the order and arrange payment.' });
   }

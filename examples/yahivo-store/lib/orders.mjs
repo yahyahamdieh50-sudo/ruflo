@@ -102,7 +102,7 @@ export function publicOrder(store, order) {
     packing: order.packing,
     totals: order.totals,
     tax: order.tax,
-    payment: order.payment,
+    payment: { method: order.payment.method, label: order.payment.label },
     fulfilment: { courierName: order.fulfilment.courierName, trackingNumber: order.fulfilment.trackingNumber, trackingUrl: order.fulfilment.trackingUrl },
     history: store.events(order.id).filter((e) => e.type === 'status').map((e) => ({ at: e.at, status: e.status, label: STATUS_LABELS[e.status] })),
   };

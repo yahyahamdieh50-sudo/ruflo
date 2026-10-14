@@ -11,6 +11,11 @@ export default async function order(main, ctx) {
   let o;
   try {
     ({ order: o } = await api(`/api/orders/${params[0]}`));
+    // Card payment still pending (e.g. just back from the payment page): the server
+    // confirms with the provider — the redirect itself is never trusted.
+    if (o.paymentStatus === 'awaiting_payment' && o.payment.method === 'ngenius') {
+      ({ order: o } = await api(`/api/orders/${params[0]}/verify-payment`, { method: 'POST', body: {} }).catch(() => ({ order: o })));
+    }
   } catch (e) {
     if (e instanceof ApiError && e.status === 404) {
       main.innerHTML = '<div class="wrap empty"><h1>Order not found</h1><p class="muted">Check the link in your confirmation, or look up your order.</p><a class="btn" href="/track" data-link>Track an order</a></div>';
@@ -41,6 +46,8 @@ export default async function order(main, ctx) {
       ${paymentNote}
       ${manual && !paid ? `<div class="notice"><h3>No payment has been taken</h3><p>This is an order request. ${esc(settings.brand)} will contact you to confirm the order and arrange payment.</p></div>` : ''}
       ${paid ? '<div class="notice"><strong>Payment received.</strong></div>' : ''}
+      ${!manual && o.paymentStatus === 'awaiting_payment' ? '<div class="notice notice-warn"><strong>Payment not confirmed yet.</strong> If you just paid, refresh this page in a minute. Please don’t pay again — contact us if this message stays.</div>' : ''}
+      ${o.paymentStatus === 'failed' ? '<div class="notice notice-err"><strong>Payment failed.</strong> You have not been charged. Please contact us to complete your order.</div>' : ''}
     </div>
     <div class="wrap cart-layout">
       <section>

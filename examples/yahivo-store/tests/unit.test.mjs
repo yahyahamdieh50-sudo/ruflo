@@ -147,3 +147,14 @@ test('launch checklist flags everything missing in the seed', () => {
     assert.match(todo, new RegExp(word, 'i'), word);
   }
 });
+
+test('CSV export neutralises spreadsheet formulas and quotes cells', async () => {
+  const { ordersCsv } = await import('../lib/fulfilment.mjs');
+  const order = { number: 'YH-1', createdAt: '2026-01-01', status: 'received', paymentStatus: 'paid', email: 'a@b.co', currency: 'AED',
+    payment: { label: 'Card' }, customer: { name: '=HYPERLINK("http://x")', phone: '+971 50', address1: 'Line "1"', city: 'Dubai', country: 'UAE' },
+    delivery: null, packing: null, lines: [{ qty: 1, name: 'H', color: 'Black', size: 'M' }], fulfilment: {}, totals: { total: 10 } };
+  const row = ordersCsv([order]).split('\r\n')[1];
+  assert.match(row, /"'=HYPERLINK\(""http:\/\/x""\)"/);
+  assert.match(row, /"'\+971 50"/);
+  assert.match(row, /"Line ""1"""/);
+});

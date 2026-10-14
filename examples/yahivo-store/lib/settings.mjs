@@ -213,7 +213,7 @@ export function launchChecklist(settings, products, { stripe, aiLive, adminPassw
     item(settings.delivery.couriers.length, 'Courier details (manual tracking workflow)', 'Admin → Delivery → Couriers.'),
     item(settings.packing.options.length, 'Packing options and fees', 'Admin → Packing.'),
     item(settings.tax.confirmed, 'Tax settings confirmed by you or your accountant', 'Admin → Tax: set name, rate, inclusive/exclusive, then tick "confirmed".'),
-    item(stripe, 'Payment provider (Stripe keys)', 'Set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET env vars (see README).'),
+    item(stripe, 'Payment provider (Network International or Stripe)', 'Set NGENIUS_API_KEY + NGENIUS_OUTLET_REF, or STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET (see README), then run a test payment.'),
     item(!settings.payments.manualOrderRequests || stripe, 'Pay-later order requests are a placeholder', 'Admin → Payments: turn off once a payment provider is live.', 'recommended'),
     item(settings.policies.shipping, 'Shipping policy text', 'Admin → Policies.'),
     item(settings.policies.returns, 'Returns / exchanges policy text', 'Admin → Policies.'),

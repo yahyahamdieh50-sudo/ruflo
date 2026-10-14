@@ -149,6 +149,9 @@ export class Store {
     this.db.prepare('UPDATE orders SET status = ?, payment_status = ?, updated_at = ?, data = ? WHERE id = ?')
       .run(status, paymentStatus, now(), JSON.stringify(data), id);
   }
+  setOrderEmail(id, email) {
+    this.db.prepare('UPDATE orders SET email = ? WHERE id = ?').run(email, id);
+  }
   addEvent(orderId, { type, status = null, note = null, actor = 'system' }) {
     this.db.prepare('INSERT INTO order_events (order_id, at, type, status, note, actor) VALUES (?, ?, ?, ?, ?, ?)')
       .run(orderId, now(), type, status, note, actor);

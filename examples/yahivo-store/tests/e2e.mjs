@@ -2,7 +2,7 @@
 // desktop and mobile, admin fulfilment, assistant. Run: npm run test:e2e
 // Uses a temporary database; set SCREENSHOT_DIR to keep screenshots.
 import { spawn } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -244,6 +244,27 @@ try {
   await desk.click('#track-form button');
   await desk.getByText('LC123456').waitFor();
   step('customer: order lookup by number + email');
+
+  // Packing slip, courier CSV export, delivered, then customer-data removal.
+  await admin.goto(`${BASE}/admin#/orders`);
+  await admin.getByText('YH-1001').click();
+  await admin.click('#print-slip');
+  await admin.locator('.slip', { hasText: 'Gift box' }).waitFor();
+  await admin.locator('.slip').getByText('LC123456').waitFor();
+  await shot(admin, 'admin-packing-slip');
+  await admin.click('#slip-back');
+  await admin.selectOption('#st', 'delivered');
+  await admin.getByRole('button', { name: 'Save changes' }).click();
+  await admin.locator('h1 .status', { hasText: 'Delivered' }).waitFor();
+  await admin.goto(`${BASE}/admin#/orders`);
+  const [download] = await Promise.all([admin.waitForEvent('download'), admin.click('#export-csv')]);
+  const csv = readFileSync(await download.path(), 'utf8');
+  assert.match(csv, /"YH-1001".*"Desk Buyer".*"Tower 9, Flat 1".*"Local Courier","LC123456"/);
+  await admin.getByText('YH-1001').click();
+  admin.once('dialog', (d) => d.accept());
+  await admin.click('#anonymise');
+  await admin.getByText('Customer personal data has been removed').waitFor();
+  step('admin: packing slip, courier CSV export, customer data removal');
 
   // Assistant (demo mode)
   await desk.click('#chat-launcher');

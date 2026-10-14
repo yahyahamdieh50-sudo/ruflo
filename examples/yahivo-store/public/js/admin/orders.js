@@ -1,6 +1,7 @@
 // Admin orders: list/filter, detail, status workflow, courier + tracking, packing notes.
 import { adminApi, ApiError, esc, money, showErrors, STATUS, statusPill, toast } from './core.js';
 import { summaryRows } from '../views/shared.js';
+import { packingSlip } from './slip.js';
 
 const FLOW = ['received', 'preparing', 'packed', 'handed_to_courier', 'delivered'];
 const PAYMENT = { awaiting_payment: 'Awaiting payment', paid: 'Paid', refunded: 'Refunded', failed: 'Failed', expired: 'Expired' };
@@ -21,7 +22,9 @@ export default async function orders(el, id) {
       <label class="sr-only" for="ofq">Search</label>
       <input id="ofq" name="q" type="search" placeholder="Order number or email" value="${esc(qs.get('q') ?? '')}">
       <button class="btn btn-small">Filter</button>
+      <a class="btn btn-ghost btn-small" id="export-csv" href="/api/admin/orders.csv?${esc(qs.toString())}" download>Export CSV (courier / packing)</a>
     </form>
+    <p class="hint">The export includes customer names, phones and addresses — share it only with your courier and keep it private.</p>
     ${data.orders.length ? `<div class="table-wrap"><table class="admin-table">
       <thead><tr><th>Order</th><th>Date</th><th>Customer</th><th>Area</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead>
       <tbody>${data.orders.map((o) => `<tr data-href="#/orders/${o.id}" tabindex="0">
@@ -56,6 +59,7 @@ async function detail(el, id) {
     <p><a href="#/orders">← All orders</a></p>
     <h1>${esc(o.number)} ${statusPill(o.status)}</h1>
     <p class="muted">Placed ${esc(new Date(o.createdAt).toLocaleString())} · Payment: ${esc(o.payment.label)} — <strong>${esc(PAYMENT[o.paymentStatus])}</strong></p>
+    <div class="actions"><button type="button" class="btn btn-ghost btn-small" id="print-slip">Print packing slip</button>${o.payment.method === 'ngenius' && o.paymentStatus === 'awaiting_payment' ? '<button type="button" class="btn btn-ghost btn-small" id="verify-pay">Check payment with Network International</button>' : ''}</div><br>
     ${o.lines.some((l) => l.sample) ? '<div class="panel-note">This order contains SAMPLE products (test data).</div>' : ''}
     <div class="two-col">
       <div>
@@ -92,12 +96,42 @@ async function detail(el, id) {
           ${summaryRows(o, { final: true })}
           ${o.tax ? `<p class="sum-note">Tax snapshot: ${esc(o.tax.name)} ${esc(o.tax.rate)}% ${o.tax.pricesIncludeTax ? '(included in prices)' : '(added)'}</p>` : '<p class="sum-note">No tax was configured when this order was placed.</p>'}
         </section>
+        <section class="panel"><h2>Customer privacy</h2>
+          ${o.customerRemoved ? '<p>Customer personal data has been removed from this order.</p>'
+            : ['delivered', 'cancelled'].includes(o.status)
+              ? '<p class="hint">If the customer asks you to delete their data, remove their name, contact details, address and notes. Items, totals and tax stay for your records. This cannot be undone.</p><button type="button" class="btn btn-danger btn-small" id="anonymise">Remove customer data</button>'
+              : '<p class="hint">Customer data can be removed once the order is delivered or cancelled.</p>'}
+        </section>
         <section class="panel"><h2>History</h2>
           <ul class="events">${events.map((e) => `<li><strong>${esc(new Date(e.at).toLocaleString())}</strong> — ${e.status ? statusPill(e.status) : ''} ${esc(e.note ?? '')} <span class="muted small">(${esc(e.actor)})</span></li>`).join('')}</ul>
         </section>
       </div>
     </div>`;
 
+  el.querySelector('#print-slip').addEventListener('click', () => {
+    el.innerHTML = `<div class="actions no-print"><button type="button" class="btn btn-small" id="do-print">Print</button><button type="button" class="btn btn-ghost btn-small" id="slip-back">Back to order</button></div>${packingSlip(o, settings)}`;
+    el.querySelector('#do-print').addEventListener('click', () => window.print());
+    el.querySelector('#slip-back').addEventListener('click', () => detail(el, id));
+  });
+  el.querySelector('#verify-pay')?.addEventListener('click', async () => {
+    try {
+      const { order } = await adminApi(`/api/orders/${o.token}/verify-payment`, { method: 'POST', body: {} });
+      toast(`Payment status: ${PAYMENT[order.paymentStatus] ?? order.paymentStatus}`);
+      detail(el, id);
+    } catch (err) {
+      toast(err.message, { error: true });
+    }
+  });
+  el.querySelector('#anonymise')?.addEventListener('click', async () => {
+    if (!confirm(`Permanently remove ${c.name}'s personal data from ${o.number}? This cannot be undone.`)) return;
+    try {
+      await adminApi(`/api/admin/orders/${id}/anonymise`, { method: 'POST', body: {} });
+      toast('Customer data removed');
+      detail(el, id);
+    } catch (err) {
+      toast(err.message, { error: true });
+    }
+  });
   const form = el.querySelector('#status-form');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();

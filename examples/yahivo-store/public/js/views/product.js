@@ -28,11 +28,10 @@ export default async function product(main, ctx) {
 
   const views = () => {
     const c = p.colors.find((x) => x.name === state.color);
-    if (p.images.length) {
-      // Photos tagged with a colour follow the colour picker; untagged photos always show.
-      const forColor = p.images.filter((img) => !img.color || img.color === state.color);
-      return (forColor.length ? forColor : p.images).map((img) => `<img src="${esc(img.src)}" alt="${esc(img.alt || p.name)}" decoding="async">`);
-    }
+    // Photos tagged with a colour follow the colour picker; untagged photos always show.
+    // A colour with no photo of its own falls through to the illustration, never another colour's photo.
+    const forColor = p.images.filter((img) => !img.color || img.color === state.color);
+    if (forColor.length) return forColor.map((img) => `<img src="${esc(img.src)}" alt="${esc(img.alt || p.name)}" decoding="async">`);
     return [hoodieSvg(c.hex, { view: 'front', label: `${p.name} in ${c.name}, front (illustration — photo coming soon)` }), hoodieSvg(c.hex, { view: 'back', label: `${p.name} in ${c.name}, back (illustration)` })];
   };
 

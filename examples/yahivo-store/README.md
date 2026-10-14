@@ -81,14 +81,14 @@ npm run test:e2e   # Playwright/Chromium: admin setup, desktop + mobile purchase
 
 ## Your catalogue (imported 2026-10-14)
 
-`data/seed/products.yahivo.json` holds the hoodies from your screen recording of yahivo.com: exact names, AED prices, colours and sold-out status. A new database starts with this catalogue (set `YAHIVO_SEED=sample` for test data). If you already ran the store with sample data, delete `data/yahivo.db` once to reload it.
+`data/seed/products.yahivo.json` holds your hoodies. Names, AED prices, colours, descriptions, materials, fit, care and measurements were read (read-only) from your Shopify store. Nothing was changed on Shopify. A new database starts with this catalogue (set `YAHIVO_SEED=sample` for test data). If you already ran the store with sample data, delete `data/yahivo.db` once to reload it.
 
-- **Published (11):** YAHIVO Crown Graphic (Black / Klein Blue / White), "Mine" and "Yours" couples hoodies, Pink Ride, Script Pink / Apricot, Oversize Fleeced Hoodie ×2 (YAHIVO logo) and Brooklyn Varsity are available. Arabic Typography, Coffee Graphic and Logo Oversized Fleece are shown as sold out.
+- **Published (11):** YAHIVO Crown Graphic (Black / Klein Blue / White), "Mine" and "Yours" couples hoodies, Pink Ride, Script Pink / Apricot, Oversize Fleeced Hoodie ×2 (YAHIVO logo) and Brooklyn Varsity, plus Arabic Typography, Coffee Graphic and Logo Oversized Fleece. These last three looked sold out in the recording, but Shopify lists them as available, so they are on sale with the same 10-per-size stock.
 - **Hidden (12), until you confirm you hold the rights:** these designs use third-party brands or characters (Nike, adidas, Toyota, BMW, Maserati, Pink Panther, Bugs Bunny, Tom & Jerry, the Simpsons, Joker) or a real person's portrait. Selling them without a licence is a legal risk, and payment providers generally prohibit it. Admin → Products → tick **Published** to show one.
 - **Not imported:** the 5 T-shirts (Essential Cotton ×3, Rebel Rabbit, Unisex Oversized) because this store sells hoodies only.
-- **Sizes:** S, M, L, XL on all live hoodies (confirmed by you). **Stock:** 10 per size for every available colour (from you). It goes down automatically with each order and back up if you cancel. Adjust it any time in Admin → Products. Sold-out hoodies stay sold out.
-- **Not in the recording, so left empty:** descriptions and materials.
-- **Photos** are cropped from the recording (about 400px). Upload the original files for sharp images. Brooklyn Varsity and Logo Oversized Fleece had no visible photo.
+- **Sizes:** S, M, L, XL on all live hoodies (confirmed by you). **Stock:** 10 per size for every available colour (from you). It goes down automatically with each order and back up if you cancel. Adjust it any time in Admin → Products. Shopify also offers 2XL (and 3XL on some designs). Add those in Admin → Products if you stock them.
+- **From Shopify:** descriptions, fabric and weight (350 gsm fleece, 380 gsm and 430 gsm heavyweight), fit, care, and measurements. Coffee Graphic is Light Gray, and Script comes in two colours, Pink and Apricot. Shopify's delivery estimate ("7–9 business days, including production") was left out because it describes print-on-demand. Add your own estimate per zone if you want one.
+- **Photos** are still cropped from the recording (about 400px). Shopify's image CDN is blocked in the build environment, so the 1400px originals could not be downloaded. Upload them in Admin → Products. Brooklyn Varsity, Logo Oversized Fleece and Script Apricot have no photo and show an illustration.
 - **Logo:** your logo is used in the header, footer, favicon and social share image (`public/img/logo-*.png`).
 
 ## Payments
@@ -131,21 +131,21 @@ npm run test:e2e   # Playwright/Chromium: admin setup, desktop + mobile purchase
 
 Admin → Dashboard shows this live. Today, everything below is still needed from you:
 
-- [x] Product names, prices, colours and sold-out status (imported from your recording)
+- [x] Product names, prices, colours, descriptions, materials and care (from Shopify)
 - [x] YAHIVO logo
 - [x] Sizes (S–XL) on live hoodies
 - [x] Delivery zones and fees (Dubai AED 15, rest of UAE AED 25)
 - [x] Stock: 10 per size per available colour
 - [x] Contact: +971 52 586 6612 (phone and WhatsApp)
-- [ ] **Original product photos** (current ones are low-resolution crops), plus descriptions and materials
+- [x] Contact email and address, shipping and returns policies (adapted from Shopify), and a size guide for S–XL
+- [ ] **Original product photos** (current ones are low-resolution crops)
 - [ ] **Decide on the 12 hidden designs** (third-party brands/characters/portrait)
 - [ ] **Delivery estimates** you can promise (optional)
 - [ ] **Couriers** you use (for the manual tracking workflow)
 - [ ] **Packing options**, fees and materials
 - [ ] **Tax settings**, confirmed with your accountant. Nothing is assumed; tax is off.
 - [ ] **Ziina**: finish account verification, create an API key, set `ZIINA_API_TOKEN`, run a test payment, then set `ZIINA_LIVE=1`. Decide whether to keep the pay-later placeholder.
-- [ ] Optional: contact email, address and opening hours
+- [ ] Optional: opening hours
 - [ ] **Social profile URLs** for Facebook, Instagram and TikTok. The links you sent are the Facebook Accounts Centre/settings page and the Instagram home page, not profile pages, so they were not added. TikTok was not provided.
-- [ ] **Shipping policy**, **returns/exchanges policy**, privacy contact email, and a legal review of the privacy page
-- [ ] **Size guide measurements** (chest, length, sleeve for S–XL)
+- [ ] **Review the adapted policies**, and have the privacy page legally reviewed
 - [ ] Optional: `ANTHROPIC_API_KEY` for the live assistant; a GA4 ID (update the privacy policy and cookie consent if you enable it)

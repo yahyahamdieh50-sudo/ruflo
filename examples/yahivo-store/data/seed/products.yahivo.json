@@ -1,14 +1,18 @@
 {
-  "_comment": "YAHIVO catalogue transcribed from the owner's screen recording of yahivo.com (2026-10-14). Names, prices (AED) and sold-out status are from the recording. Sizes S–XL confirmed by the owner for published hoodies (2026-10-14). Stock: 10 per size for every available colour (owner, 2026-10-14); descriptions and materials were not shown, so they are empty. Products with published=false carry third-party brands/characters or a real person's likeness and are hidden until the owner confirms the rights. Photos are cropped from the recording (low resolution) — replace with originals.",
+  "_comment": "YAHIVO catalogue. Names, prices (AED), colours, descriptions, materials, fit, care and measurements imported read-only from the owner's Shopify store (yahivo.com) on 2026-10-14; photos are still crops from the owner's screen recording (Shopify CDN not reachable from the build environment — replace with originals). Sizes S–XL and stock of 10 per size confirmed by the owner for this store (Shopify also lists 2XL/3XL). Products with published=false carry third-party brands/characters or a real person's likeness and are hidden until the owner confirms the rights.",
   "products": [
     {
       "slug": "yahivo-crown-graphic-oversized-hoodie",
       "name": "YAHIVO Crown Graphic Oversized Hoodie",
       "style": "Oversized",
-      "description": null,
-      "details": [],
-      "material": null,
-      "fit": null,
+      "description": "An oversized fleece hoodie with a loose fit, dropped shoulders and long sleeves. An easy layer for cooler days, styled with jeans or joggers.",
+      "details": [
+        "Hooded neckline",
+        "Season: autumn / winter",
+        "Care: machine wash at 30°C (gentle), do not bleach, tumble dry low, iron low avoiding the print, do not dry clean"
+      ],
+      "material": "42% cotton, 53% polyester, 5% other fibres — 350 gsm fleece (thick, slight stretch)",
+      "fit": "Loose oversized fit with dropped shoulders and long sleeves",
       "price": 153.52,
       "sizes": [
         "S",
@@ -75,10 +79,14 @@
       "slug": "yahivo-mine-couples-hoodie-black",
       "name": "YAHIVO \"Mine\" Couples Hoodie — Black",
       "style": "Couples",
-      "description": null,
-      "details": [],
-      "material": null,
-      "fit": null,
+      "description": "An oversized fleece hoodie with a loose fit, dropped shoulders and long sleeves. An easy layer for cooler days, styled with jeans or joggers.",
+      "details": [
+        "Hooded neckline",
+        "Season: autumn / winter",
+        "Care: machine wash at 30°C (gentle), do not bleach, tumble dry low, iron low avoiding the print, do not dry clean"
+      ],
+      "material": "42% cotton, 53% polyester, 5% other fibres — 350 gsm fleece (thick, slight stretch)",
+      "fit": "Loose oversized fit with dropped shoulders and long sleeves",
       "price": 131.56,
       "sizes": [
         "S",
@@ -114,10 +122,14 @@
       "slug": "yahivo-yours-couples-hoodie-pink",
       "name": "YAHIVO \"Yours\" Couples Hoodie — Pink",
       "style": "Couples",
-      "description": null,
-      "details": [],
-      "material": null,
-      "fit": null,
+      "description": "An oversized fleece hoodie with a loose fit, dropped shoulders and long sleeves. An easy layer for cooler days, styled with jeans or joggers.",
+      "details": [
+        "Hooded neckline",
+        "Season: autumn / winter",
+        "Care: machine wash at 30°C (gentle), do not bleach, tumble dry low, iron low avoiding the print, do not dry clean"
+      ],
+      "material": "42% cotton, 53% polyester, 5% other fibres — 350 gsm fleece (thick, slight stretch)",
+      "fit": "Loose oversized fit with dropped shoulders and long sleeves",
       "price": 131.56,
       "sizes": [
         "S",
@@ -153,10 +165,16 @@
       "slug": "yahivo-pink-ride-heavyweight-hoodie-pink",
       "name": "YAHIVO Pink Ride Heavyweight Hoodie — Pink",
       "style": "Heavyweight",
-      "description": null,
-      "details": [],
-      "material": null,
-      "fit": null,
+      "description": "A heavyweight cotton-blend hoodie with a relaxed fit, front pouch pocket, hood and ribbed cuffs. Designed for comfortable everyday layering.",
+      "details": [
+        "Front pouch pocket",
+        "Hooded neckline",
+        "Season: spring / autumn",
+        "Care: machine wash at 30°C (gentle), do not bleach, tumble dry low, iron low avoiding the print, do not dry clean",
+        "Measurements (cm) — length / shoulder / chest / sleeve: S 70/64/65/53 · M 72/66/67/54 · L 74/68/69/55 · XL 76/70/71/56"
+      ],
+      "material": "56.44% cotton, 43.56% polyester — 430 gsm heavyweight (thick)",
+      "fit": "Oversized fit with dropped shoulders and long sleeves",
       "price": 212.81,
       "sizes": [
         "S",
@@ -192,10 +210,14 @@
       "slug": "yahivo-script-oversized-fleece-hoodie-pink-apricot",
       "name": "YAHIVO Script Oversized Fleece Hoodie — Pink / Apricot",
       "style": "Oversized",
-      "description": null,
-      "details": [],
-      "material": null,
-      "fit": null,
+      "description": "An oversized fleece hoodie with a loose fit, dropped shoulders and long sleeves. An easy layer for cooler days, styled with jeans or joggers.",
+      "details": [
+        "Hooded neckline",
+        "Season: autumn / winter",
+        "Care: machine wash at 30°C (gentle), do not bleach, tumble dry low, iron low avoiding the print, do not dry clean"
+      ],
+      "material": "42% cotton, 53% polyester, 5% other fibres — 350 gsm fleece (thick, slight stretch)",
+      "fit": "Loose oversized fit with dropped shoulders and long sleeves",
       "price": 153.52,
       "sizes": [
         "S",
@@ -205,8 +227,18 @@
       ],
       "colors": [
         {
-          "name": "Pink / Apricot",
-          "hex": "#F2A9C7",
+          "name": "Pink",
+          "hex": "#F2A7C3",
+          "stock": {
+            "S": 10,
+            "M": 10,
+            "L": 10,
+            "XL": 10
+          }
+        },
+        {
+          "name": "Apricot",
+          "hex": "#F5C7A1",
           "stock": {
             "S": 10,
             "M": 10,
@@ -218,7 +250,8 @@
       "images": [
         {
           "src": "/img/products/yahivo-script-oversized-fleece-hoodie-pink.jpg",
-          "alt": "Pink oversized hoodie with YAHIVO script print"
+          "alt": "YAHIVO Script hoodie in pink",
+          "color": "Pink"
         }
       ],
       "featured": false,
@@ -231,10 +264,14 @@
       "slug": "oversize-fleeced-hoodie",
       "name": "Oversize Fleeced Hoodie",
       "style": "Oversized",
-      "description": null,
-      "details": [],
-      "material": null,
-      "fit": null,
+      "description": "An oversized fleece hoodie with a loose fit, dropped shoulders and long sleeves. An easy layer for cooler days, styled with jeans or joggers.",
+      "details": [
+        "Hooded neckline",
+        "Season: autumn / winter",
+        "Care: machine wash at 30°C (gentle), do not bleach, tumble dry low, iron low avoiding the print, do not dry clean"
+      ],
+      "material": "42% cotton, 53% polyester, 5% other fibres — 350 gsm fleece (thick, slight stretch)",
+      "fit": "Loose oversized fit with dropped shoulders and long sleeves",
       "price": 153.52,
       "sizes": [
         "S",
@@ -270,10 +307,14 @@
       "slug": "oversize-fleeced-hoodie-4",
       "name": "Oversize Fleeced Hoodie",
       "style": "Oversized",
-      "description": null,
-      "details": [],
-      "material": null,
-      "fit": null,
+      "description": "An oversized fleece hoodie with a loose fit, dropped shoulders and long sleeves. An easy layer for cooler days, styled with jeans or joggers.",
+      "details": [
+        "Hooded neckline",
+        "Season: autumn / winter",
+        "Care: machine wash at 30°C (gentle), do not bleach, tumble dry low, iron low avoiding the print, do not dry clean"
+      ],
+      "material": "42% cotton, 53% polyester, 5% other fibres — 350 gsm fleece (thick, slight stretch)",
+      "fit": "Loose oversized fit with dropped shoulders and long sleeves",
       "price": 153.52,
       "sizes": [
         "S",
@@ -309,10 +350,14 @@
       "slug": "brooklyn-varsity-oversized-hoodie-flower-gray",
       "name": "Brooklyn Varsity Oversized Hoodie — Flower Gray",
       "style": "Oversized",
-      "description": null,
-      "details": [],
-      "material": null,
-      "fit": null,
+      "description": "An oversized fleece hoodie with a loose fit, dropped shoulders and long sleeves. An easy layer for cooler days, styled with jeans or joggers.",
+      "details": [
+        "Hooded neckline",
+        "Season: autumn / winter",
+        "Care: machine wash at 30°C (gentle), do not bleach, tumble dry low, iron low avoiding the print, do not dry clean"
+      ],
+      "material": "42% cotton, 53% polyester, 5% other fibres — 350 gsm fleece (thick, slight stretch)",
+      "fit": "Loose oversized fit with dropped shoulders and long sleeves",
       "price": 131.56,
       "sizes": [
         "S",
@@ -343,10 +388,14 @@
       "slug": "yahivo-arabic-typography-oversized-hoodie",
       "name": "YAHIVO Arabic Typography Oversized Hoodie",
       "style": "Oversized",
-      "description": null,
-      "details": [],
-      "material": null,
-      "fit": null,
+      "description": "Let your outfit do the talking. Featuring Arabic typography across the chest and a large red-and-black portrait graphic with YAHIVO branding on the back, this oversized hoodie makes a statement from both sides. Layer its substantial 380 gsm cotton blend over a tee and pair it with jeans or joggers for cooler days.",
+      "details": [
+        "Hooded neckline",
+        "Care: machine wash at 30°C (gentle), do not bleach, tumble dry low, iron low avoiding the print, do not dry clean",
+        "Measurements (cm) — length / shoulder / chest / sleeve: S 67/59/60/54.5 · M 69/61/62/55.3 · L 71/63/64/56.1 · XL 73/65/66/56.9"
+      ],
+      "material": "85% cotton, 15% polyester — 380 gsm (moderate thickness)",
+      "fit": "Oversized fit with dropped shoulders and long sleeves",
       "price": 183.0,
       "sizes": [
         "S",
@@ -359,10 +408,10 @@
           "name": "Mint",
           "hex": "#A9E8BC",
           "stock": {
-            "S": 0,
-            "M": 0,
-            "L": 0,
-            "XL": 0
+            "S": 10,
+            "M": 10,
+            "L": 10,
+            "XL": 10
           }
         }
       ],
@@ -382,10 +431,14 @@
       "slug": "yahivo-coffee-graphic-oversized-hoodie",
       "name": "YAHIVO Coffee Graphic Oversized Hoodie",
       "style": "Oversized",
-      "description": null,
-      "details": [],
-      "material": null,
-      "fit": null,
+      "description": "For coffee runs and laid-back days. This hoodie features a small coffee-and-smile graphic with an oversized fit and dropped shoulders. Its substantial 380 gsm cotton blend makes it an easy layer over a tee, paired with jeans or joggers.",
+      "details": [
+        "Hooded neckline",
+        "Care: machine wash at 30°C (gentle), do not bleach, tumble dry low, iron low avoiding the print, do not dry clean",
+        "Measurements (cm) — length / shoulder / chest / sleeve: S 67/59/60/54.5 · M 69/61/62/55.3 · L 71/63/64/56.1 · XL 73/65/66/56.9"
+      ],
+      "material": "85% cotton, 15% polyester — 380 gsm (moderate thickness)",
+      "fit": "Oversized fit with dropped shoulders and long sleeves",
       "price": 176.26,
       "sizes": [
         "S",
@@ -395,20 +448,20 @@
       ],
       "colors": [
         {
-          "name": "Sage",
-          "hex": "#B8B497",
+          "name": "Light Gray",
+          "hex": "#C9CACB",
           "stock": {
-            "S": 0,
-            "M": 0,
-            "L": 0,
-            "XL": 0
+            "S": 10,
+            "M": 10,
+            "L": 10,
+            "XL": 10
           }
         }
       ],
       "images": [
         {
           "src": "/img/products/yahivo-coffee-graphic-oversized-hoodie.jpg",
-          "alt": "Model wearing the sage YAHIVO Coffee Graphic hoodie"
+          "alt": "YAHIVO Coffee Graphic hoodie in light gray"
         }
       ],
       "featured": false,
@@ -421,10 +474,14 @@
       "slug": "yahivo-logo-oversized-fleece-hoodie",
       "name": "YAHIVO Logo Oversized Fleece Hoodie",
       "style": "Oversized",
-      "description": null,
-      "details": [],
-      "material": null,
-      "fit": null,
+      "description": "Make YAHIVO the statement. Featuring a bold logo graphic, this oversized fleece hoodie pairs a relaxed silhouette with dropped shoulders for easy streetwear styling. Throw it over a tee and pair it with jeans or joggers for cooler days.",
+      "details": [
+        "Hooded neckline",
+        "Season: autumn / winter",
+        "Care: machine wash at 30°C (gentle), do not bleach, tumble dry low, iron low avoiding the print, do not dry clean"
+      ],
+      "material": "42% cotton, 53% polyester, 5% other fibres — 350 gsm fleece (thick, slight stretch)",
+      "fit": "Loose oversized fit with dropped shoulders and long sleeves",
       "price": 146.88,
       "sizes": [
         "S",
@@ -437,10 +494,10 @@
           "name": "Black",
           "hex": "#111111",
           "stock": {
-            "S": 0,
-            "M": 0,
-            "L": 0,
-            "XL": 0
+            "S": 10,
+            "M": 10,
+            "L": 10,
+            "XL": 10
           }
         }
       ],

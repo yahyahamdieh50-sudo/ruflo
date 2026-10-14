@@ -92,7 +92,7 @@ test('Ziina failure cancels the order and releases stock', async () => {
 
 const crownStock = (list) => list.find((p) => p.slug === 'yahivo-crown-graphic-oversized-hoodie').colors[0].stock;
 
-test('real YAHIVO catalogue: published items only, no invented sizes, sold-out status kept', async () => {
+test('real YAHIVO catalogue: Shopify details, owner sizes/stock, hidden third-party designs', async () => {
   const store = new Store(':memory:', { seed: 'yahivo' });
   const all = store.listProducts({ includeUnpublished: true });
   const published = store.listProducts();
@@ -107,8 +107,17 @@ test('real YAHIVO catalogue: published items only, no invented sizes, sold-out s
   assert.equal(crown.price, 153.52);
   assert.deepEqual(crown.colors.map((c) => c.name), ['Black', 'Klein Blue', 'White']);
   assert.ok(crown.images.every((i) => i.color));
+  assert.ok(published.every((p) => p.description && p.material && p.fit), 'descriptions/material/fit imported from Shopify');
   const coffee = published.find((p) => p.slug === 'yahivo-coffee-graphic-oversized-hoodie');
-  assert.deepEqual(coffee.colors[0].stock, { S: 0, M: 0, L: 0, XL: 0 }, 'sold out');
+  assert.equal(coffee.colors[0].name, 'Light Gray');
+  assert.deepEqual(coffee.colors[0].stock, { S: 10, M: 10, L: 10, XL: 10 }, 'available on Shopify → owner stock rule');
+  const script = published.find((p) => p.slug === 'yahivo-script-oversized-fleece-hoodie-pink-apricot');
+  assert.deepEqual(script.colors.map((c) => c.name), ['Pink', 'Apricot']);
+  const settings = store.getSettings();
+  assert.equal(settings.contact.email, 'yahia.h2026@hotmail.com');
+  assert.ok(settings.policies.shipping && settings.policies.returns, 'policies from Shopify');
+  assert.equal(/confirmation email|we('ll)? email|weight/i.test(settings.policies.shipping), false, 'no promises this store cannot keep');
+  assert.equal(settings.sizeGuide.rows.length, 4);
   store.close();
 });
 
@@ -129,7 +138,7 @@ test('real store settings: pay-later orders with Dubai AED 15 / rest of UAE AED 
   const order = store.getOrder(placed.id);
   assert.equal(order.paymentStatus, 'awaiting_payment');
   assert.equal(order.totals.total, 322.04);
-  const soldOut = quote({ items: [{ slug: 'yahivo-coffee-graphic-oversized-hoodie', color: 'Sage', size: 'M', qty: 1 }] }, ctx);
-  assert.equal(soldOut.issues[0].type, 'sold_out');
+  const coffee = quote({ items: [{ slug: 'yahivo-coffee-graphic-oversized-hoodie', color: 'Light Gray', size: 'M', qty: 1 }] }, ctx);
+  assert.deepEqual(coffee.issues, [], 'available again, as on Shopify');
   store.close();
 });

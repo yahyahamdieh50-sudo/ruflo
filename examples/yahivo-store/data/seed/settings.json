@@ -11,10 +11,10 @@
     "subhead": "Pick a style, choose your fit and check out in a few taps."
   },
   "contact": {
-    "email": null,
+    "email": "yahia.h2026@hotmail.com",
     "phone": "+971 52 586 6612",
     "whatsapp": "+971 52 586 6612",
-    "address": null,
+    "address": "Khaldyiah, Abu Dhabi, United Arab Emirates",
     "hours": null
   },
   "social": {
@@ -73,20 +73,58 @@
     "manualOrderRequests": true
   },
   "policies": {
-    "shipping": null,
-    "returns": null,
-    "privacyContactEmail": null,
-    "lastUpdated": null
+    "shipping": "We currently deliver within the United Arab Emirates only.\n\nOrder processing\nOrders are processed as soon as possible.\n\nDelivery fees\nDelivery is charged by emirate and shown at checkout before you place your order: Dubai AED 15; Abu Dhabi, Sharjah, Ajman, Umm Al Quwain, Ras Al Khaimah and Fujairah AED 25.\n\nDelivery times\nDelivery times are estimates, not guarantees, and begin once your order is handed to the courier. They may be affected by courier delays, weather or other events outside our control.\n\nOrder tracking\nUse the Track order page with your order number and the email you used at checkout to see your order's status, courier and tracking number once it has been handed to the courier.\n\nAddress accuracy\nPlease check your delivery address at checkout. Contact us as soon as possible if you need to correct it.\n\nLost, damaged or delayed parcels\nIf your order is lost, damaged or delayed, contact us and we will help you work with the courier.\n\nOrder changes and cancellations\nNeed to change or cancel your order? Contact us as soon as possible. We may be able to make changes before your order is handed to the courier; once it is in transit we can't modify it.\n\nQuestions? Contact us at yahia.h2026@hotmail.com or +971 52 586 6612 (phone / WhatsApp).",
+    "returns": "Returns\nReturn eligibility depends on the items in your order. Where returns are accepted, items must be returned in the same condition they were received — unworn or unused, with tags, and in their original packaging. We may reduce your refund if an item has been used, damaged or handled more than necessary.\n\nHow to start a return\nContact us before returning an item. Unless we state otherwise or the law requires otherwise, you are responsible for return shipping costs for change-of-mind returns.\n\nDamages and issues\nPlease inspect your order when you receive it and contact us immediately if an item is defective or damaged, or if you received the wrong item.\n\nExceptions\nSome items may not be eligible for return, as stated on the product page at the time of purchase. Contact us if you have questions about whether a specific item can be returned.\n\nExchanges\nContact us to ask about exchange options before returning your item.\n\nRefunds\nWe will let you know after we receive and inspect your return whether the refund was approved. If approved, you will be refunded to your original payment method, unless otherwise stated. Your bank or payment provider may need additional time to process the refund. If you don't see your refund within a reasonable time after approval, contact us.\n\nThis policy does not limit any rights you may have under applicable consumer protection laws.\n\nTo request a cancellation, start a return, ask about an exchange or report a damaged item, contact us at yahia.h2026@hotmail.com.",
+    "privacyContactEmail": "yahia.h2026@hotmail.com",
+    "lastUpdated": "2026-10-13"
   },
   "sizeGuide": {
     "unit": "cm",
     "columns": [
-      "Chest width",
-      "Body length",
+      "Length",
+      "Shoulder",
+      "Chest",
       "Sleeve length"
     ],
-    "rows": [],
-    "fitNotes": null
+    "rows": [
+      {
+        "size": "S",
+        "values": [
+          "70",
+          "65",
+          "66",
+          "53.5"
+        ]
+      },
+      {
+        "size": "M",
+        "values": [
+          "72",
+          "67",
+          "68",
+          "54.5"
+        ]
+      },
+      {
+        "size": "L",
+        "values": [
+          "74",
+          "69",
+          "70",
+          "55.5"
+        ]
+      },
+      {
+        "size": "XL",
+        "values": [
+          "76",
+          "71",
+          "72",
+          "56.5"
+        ]
+      }
+    ],
+    "fitNotes": "Garment measurements for the oversized fleece hoodies (loose fit, dropped shoulders). The Pink Ride, Coffee Graphic and Arabic Typography hoodies are cut differently — their measurements are listed on each product page. Compare with a hoodie you already own."
   },
   "faqs": [],
   "analytics": {

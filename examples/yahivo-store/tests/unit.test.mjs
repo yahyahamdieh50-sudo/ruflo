@@ -10,7 +10,7 @@ import { filterProducts, parseQuery } from '../lib/catalog.mjs';
 import { nextStatuses } from '../lib/orders.mjs';
 import { readFileSync } from 'node:fs';
 
-const seedSettings = JSON.parse(readFileSync(new URL('../data/seed/settings.json', import.meta.url)));
+const seedSettings = JSON.parse(readFileSync(new URL('../data/seed/settings.sample.json', import.meta.url)));
 const sampleProducts = JSON.parse(readFileSync(new URL('../data/seed/products.sample.json', import.meta.url))).products.map(validateProduct);
 
 test('totals: no tax configured → no tax line, total = items + packing + delivery', () => {

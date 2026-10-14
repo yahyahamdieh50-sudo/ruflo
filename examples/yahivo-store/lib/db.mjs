@@ -53,7 +53,7 @@ export class Store {
 
   #seed(seed) {
     if (!this.db.prepare('SELECT 1 FROM settings WHERE id = 1').get()) {
-      this.db.prepare('INSERT INTO settings (id, data, updated_at) VALUES (1, ?, ?)').run(JSON.stringify(readSeed('settings.json')), now());
+      this.db.prepare('INSERT INTO settings (id, data, updated_at) VALUES (1, ?, ?)').run(JSON.stringify(readSeed(seed === 'sample' ? 'settings.sample.json' : 'settings.json')), now());
     }
     const count = this.db.prepare('SELECT COUNT(*) AS n FROM products').get().n;
     const files = { yahivo: 'products.yahivo.json', sample: 'products.sample.json' };

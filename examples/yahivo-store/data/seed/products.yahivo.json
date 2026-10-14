@@ -1,5 +1,5 @@
 {
-  "_comment": "YAHIVO catalogue transcribed from the owner's screen recording of yahivo.com (2026-10-14). Names, prices (AED) and sold-out status are from the recording. Sizes, stock quantities, descriptions and materials were NOT shown, so they are empty — add them in Admin → Products. Products with published=false carry third-party brands/characters or a real person's likeness and are hidden until the owner confirms the rights. Photos are cropped from the recording (low resolution) — replace with originals.",
+  "_comment": "YAHIVO catalogue transcribed from the owner's screen recording of yahivo.com (2026-10-14). Names, prices (AED) and sold-out status are from the recording. Sizes S–XL confirmed by the owner for published hoodies (2026-10-14). Stock quantities are not tracked yet (owner will enter them); descriptions and materials were not shown, so they are empty. Products with published=false carry third-party brands/characters or a real person's likeness and are hidden until the owner confirms the rights. Photos are cropped from the recording (low resolution) — replace with originals.",
   "products": [
     {
       "slug": "yahivo-crown-graphic-oversized-hoodie",
@@ -10,7 +10,12 @@
       "material": null,
       "fit": null,
       "price": 153.52,
-      "sizes": [],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "colors": [
         {
           "name": "Black",
@@ -60,7 +65,12 @@
       "material": null,
       "fit": null,
       "price": 131.56,
-      "sizes": [],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "colors": [
         {
           "name": "Black",
@@ -89,7 +99,12 @@
       "material": null,
       "fit": null,
       "price": 131.56,
-      "sizes": [],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "colors": [
         {
           "name": "Pink",
@@ -118,7 +133,12 @@
       "material": null,
       "fit": null,
       "price": 212.81,
-      "sizes": [],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "colors": [
         {
           "name": "Pink",
@@ -147,7 +167,12 @@
       "material": null,
       "fit": null,
       "price": 153.52,
-      "sizes": [],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "colors": [
         {
           "name": "Pink / Apricot",
@@ -176,7 +201,12 @@
       "material": null,
       "fit": null,
       "price": 153.52,
-      "sizes": [],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "colors": [
         {
           "name": "Black",
@@ -205,7 +235,12 @@
       "material": null,
       "fit": null,
       "price": 153.52,
-      "sizes": [],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "colors": [
         {
           "name": "Black",
@@ -234,7 +269,12 @@
       "material": null,
       "fit": null,
       "price": 131.56,
-      "sizes": [],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "colors": [
         {
           "name": "Flower Gray",
@@ -258,12 +298,22 @@
       "material": null,
       "fit": null,
       "price": 183.0,
-      "sizes": [],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "colors": [
         {
           "name": "Mint",
           "hex": "#A9E8BC",
-          "stock": {}
+          "stock": {
+            "S": 0,
+            "M": 0,
+            "L": 0,
+            "XL": 0
+          }
         }
       ],
       "images": [
@@ -287,12 +337,22 @@
       "material": null,
       "fit": null,
       "price": 176.26,
-      "sizes": [],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "colors": [
         {
           "name": "Sage",
           "hex": "#B8B497",
-          "stock": {}
+          "stock": {
+            "S": 0,
+            "M": 0,
+            "L": 0,
+            "XL": 0
+          }
         }
       ],
       "images": [
@@ -316,12 +376,22 @@
       "material": null,
       "fit": null,
       "price": 146.88,
-      "sizes": [],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "colors": [
         {
           "name": "Black",
           "hex": "#111111",
-          "stock": {}
+          "stock": {
+            "S": 0,
+            "M": 0,
+            "L": 0,
+            "XL": 0
+          }
         }
       ],
       "images": [],

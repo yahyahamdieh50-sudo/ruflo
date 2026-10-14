@@ -1,0 +1,65 @@
+{
+  "brand": "YAHIVO",
+  "currency": "AED",
+  "locale": "en-AE",
+  "logo": "/img/logo-wordmark-dark.png",
+  "logoLight": "/img/logo-full-light.png",
+  "ogImage": "/img/og-default.png",
+  "hero": {
+    "eyebrow": "YAHIVO",
+    "headline": "Hoodies. Your size. Your colour.",
+    "subhead": "Pick a style, choose your fit and check out in a few taps."
+  },
+  "contact": {
+    "email": null,
+    "phone": null,
+    "whatsapp": null,
+    "address": null,
+    "hours": null
+  },
+  "social": {
+    "facebook": null,
+    "instagram": null,
+    "tiktok": null
+  },
+  "delivery": {
+    "zones": [],
+    "couriers": []
+  },
+  "packing": {
+    "options": []
+  },
+  "tax": {
+    "enabled": false,
+    "name": "",
+    "rate": null,
+    "pricesIncludeTax": false,
+    "appliesToDelivery": false,
+    "appliesToPacking": false,
+    "registrationNumber": null,
+    "confirmed": false
+  },
+  "payments": {
+    "manualOrderRequests": false
+  },
+  "policies": {
+    "shipping": null,
+    "returns": null,
+    "privacyContactEmail": null,
+    "lastUpdated": null
+  },
+  "sizeGuide": {
+    "unit": "cm",
+    "columns": [
+      "Chest width",
+      "Body length",
+      "Sleeve length"
+    ],
+    "rows": [],
+    "fitNotes": null
+  },
+  "faqs": [],
+  "analytics": {
+    "ga4MeasurementId": null
+  }
+}

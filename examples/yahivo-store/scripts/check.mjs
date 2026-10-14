@@ -44,10 +44,12 @@ for (const file of ['products.yahivo.json', 'products.sample.json']) {
     }
   } catch (e) { fail(`${file} invalid: ${JSON.stringify(e.fields ?? e.message)}`); }
 }
-try {
-  let s = JSON.parse(readFileSync(path.join(root, 'data/seed/settings.json'), 'utf8'));
-  for (const sec of SECTIONS) s = applySection(s, sec, sec === 'store' ? s : s[sec]);
-} catch (e) { fail(`seed settings invalid: ${JSON.stringify(e.fields ?? e.message)}`); }
+for (const file of ['settings.json', 'settings.sample.json']) {
+  try {
+    let s = JSON.parse(readFileSync(path.join(root, 'data/seed', file), 'utf8'));
+    for (const sec of SECTIONS) s = applySection(s, sec, sec === 'store' ? s : s[sec]);
+  } catch (e) { fail(`${file} invalid: ${JSON.stringify(e.fields ?? e.message)}`); }
+}
 
 if (failed) { console.error(`\n${failed} check(s) failed`); process.exit(1); }
 console.log(`✓ ${files.filter((x) => /\.m?js$/.test(x)).length} JS files parse, seed data valid, no secrets in public/, all files ≤ 500 lines`);

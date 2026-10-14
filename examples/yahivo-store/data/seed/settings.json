@@ -23,7 +23,37 @@
     "tiktok": null
   },
   "delivery": {
-    "zones": [],
+    "zones": [
+      {
+        "id": "dubai",
+        "name": "Dubai",
+        "country": "United Arab Emirates",
+        "areas": [
+          "Dubai"
+        ],
+        "fee": 15,
+        "freeOver": null,
+        "estimate": null,
+        "enabled": true
+      },
+      {
+        "id": "rest-of-uae",
+        "name": "Rest of UAE",
+        "country": "United Arab Emirates",
+        "areas": [
+          "Abu Dhabi",
+          "Sharjah",
+          "Ajman",
+          "Umm Al Quwain",
+          "Ras Al Khaimah",
+          "Fujairah"
+        ],
+        "fee": 25,
+        "freeOver": null,
+        "estimate": null,
+        "enabled": true
+      }
+    ],
     "couriers": []
   },
   "packing": {
@@ -40,7 +70,7 @@
     "confirmed": false
   },
   "payments": {
-    "manualOrderRequests": false
+    "manualOrderRequests": true
   },
   "policies": {
     "shipping": null,

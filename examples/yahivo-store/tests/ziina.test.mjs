@@ -96,13 +96,37 @@ test('real YAHIVO catalogue: published items only, no invented sizes, sold-out s
   const published = store.listProducts();
   assert.equal(all.length, 23);
   assert.equal(published.length, 11);
-  assert.ok(all.every((p) => p.sizes.length === 0 && !p.sample), 'sizes left empty — not invented');
+  assert.ok(published.every((p) => p.sizes.join() === 'S,M,L,XL' && !p.sample), 'owner-confirmed sizes on live hoodies');
+  assert.ok(all.filter((p) => !p.published).every((p) => p.sizes.length === 0), 'hidden designs untouched');
+  assert.ok(published.filter((p) => p.slug !== 'yahivo-coffee-graphic-oversized-hoodie').some((p) => p.colors.every((c) => c.stock === null)), 'stock not tracked until the owner enters it');
   assert.ok(!published.some((p) => /toyota|bmw|tom-jerry|drop-shoulder|tonal|portrait/.test(p.slug)), 'third-party/likeness items hidden');
   const crown = published.find((p) => p.slug === 'yahivo-crown-graphic-oversized-hoodie');
   assert.equal(crown.price, 153.52);
   assert.deepEqual(crown.colors.map((c) => c.name), ['Black', 'Klein Blue', 'White']);
   assert.ok(crown.images.every((i) => i.color));
   const coffee = published.find((p) => p.slug === 'yahivo-coffee-graphic-oversized-hoodie');
-  assert.deepEqual(coffee.colors[0].stock, {}, 'sold out');
+  assert.deepEqual(coffee.colors[0].stock, { S: 0, M: 0, L: 0, XL: 0 }, 'sold out');
+  store.close();
+});
+
+test('real store settings: pay-later orders with Dubai AED 15 / rest of UAE AED 25 delivery', async () => {
+  const { quote, placeOrder, paymentMethods } = await import('../lib/checkout.mjs');
+  const store = new Store(':memory:', { seed: 'yahivo' });
+  const settings = store.getSettings();
+  const methods = paymentMethods(settings, {});
+  assert.deepEqual(methods.map((m) => m.id), ['manual'], 'no online payment — order now, pay later');
+  const items = [{ slug: 'yahivo-crown-graphic-oversized-hoodie', color: 'Klein Blue', size: 'L', qty: 2 }];
+  const ctx = { settings, products: store.listProducts(), methods };
+  const dubai = quote({ items, country: 'United Arab Emirates', region: 'Dubai' }, ctx);
+  assert.deepEqual([dubai.totals.items, dubai.totals.delivery, dubai.totals.tax, dubai.totals.total], [307.04, 15, 0, 322.04]);
+  const sharjah = quote({ items, country: 'United Arab Emirates', region: 'Sharjah' }, ctx);
+  assert.equal(sharjah.totals.delivery, 25);
+  const placed = placeOrder({ items, paymentMethod: 'manual', expectedTotal: 322.04,
+    customer: { name: 'Real Buyer', email: 'r@example.com', phone: '+971 50 111 0000', country: 'United Arab Emirates', region: 'Dubai', city: 'JBR', address1: 'Tower 1' } }, { store, settings, methods });
+  const order = store.getOrder(placed.id);
+  assert.equal(order.paymentStatus, 'awaiting_payment');
+  assert.equal(order.totals.total, 322.04);
+  const soldOut = quote({ items: [{ slug: 'yahivo-coffee-graphic-oversized-hoodie', color: 'Sage', size: 'M', qty: 1 }] }, ctx);
+  assert.equal(soldOut.issues[0].type, 'sold_out');
   store.close();
 });

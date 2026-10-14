@@ -1,5 +1,5 @@
 {
-  "_comment": "YAHIVO catalogue. Names, prices (AED), colours, descriptions, materials, fit, care and measurements imported read-only from the owner's Shopify store (yahivo.com) on 2026-10-14; photos are still crops from the owner's screen recording (Shopify CDN not reachable from the build environment — replace with originals). Sizes S–XL and stock of 10 per size confirmed by the owner for this store (Shopify also lists 2XL/3XL). Products with published=false carry third-party brands/characters or a real person's likeness and are hidden until the owner confirms the rights.",
+  "_comment": "YAHIVO catalogue. Names, prices (AED), colours, descriptions, materials, fit, care and measurements imported read-only from the owner's Shopify store (yahivo.com) on 2026-10-14; photos are still crops from the owner's screen recording (Shopify CDN not reachable from the build environment — replace with originals). Sizes S–XL and stock of 10 per size confirmed by the owner for this store (Shopify also lists 2XL/3XL). The owner confirmed on 2026-10-14 that they hold the rights to the Peace, Just Do It and Tom and Jerry designs, which are now published with the owner's photos. Remaining products with published=false carry third-party brands/characters or a real person's likeness and are hidden until the owner confirms the rights.",
   "products": [
     {
       "slug": "yahivo-crown-graphic-oversized-hoodie",
@@ -558,25 +558,46 @@
     },
     {
       "slug": "essential-heavyweight-drop-shoulder-hoodie",
-      "name": "Essential Heavyweight Drop-Shoulder Hoodie",
+      "name": "Essential Heavyweight Drop-Shoulder Hoodie — Just Do It",
       "style": "Heavyweight",
-      "description": null,
-      "details": [],
-      "material": null,
-      "fit": null,
+      "description": "A foundational piece in the Essential collection, made from a substantial 380 gsm heavyweight cotton blend for durability and drape. The drop-shoulder design gives a modern, relaxed fit.",
+      "details": [
+        "Hooded neckline",
+        "Season: winter",
+        "Care: machine wash at 30°C (gentle), do not bleach, tumble dry low, iron low avoiding the print, do not dry clean",
+        "Measurements (cm) — length / shoulder / chest / sleeve: S 67/59/60/54.5 · M 69/61/62/55.3 · L 71/63/64/56.1 · XL 73/65/66/56.9"
+      ],
+      "material": "85% cotton, 15% polyester — 380 gsm (moderate thickness)",
+      "fit": "Oversized fit with dropped shoulders and long sleeves",
       "price": 172.26,
-      "sizes": [],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "colors": [
         {
-          "name": "Sage",
-          "hex": "#B8B497",
-          "stock": {}
+          "name": "Light Gray",
+          "hex": "#B9B6A6",
+          "stock": {
+            "S": 10,
+            "M": 10,
+            "L": 10,
+            "XL": 10
+          }
         }
       ],
-      "images": [],
+      "images": [
+        {
+          "src": "/img/products/heavyweight-drop-shoulder-hoodie-just-do-it-light-gray.jpg",
+          "alt": "Light gray heavyweight hoodie with Just Do It cartoon print",
+          "color": "Light Gray"
+        }
+      ],
       "featured": false,
       "isNew": false,
-      "published": false,
+      "published": true,
       "sample": false,
       "createdAt": "2026-10-14"
     },
@@ -606,25 +627,46 @@
     },
     {
       "slug": "essential-heavyweight-drop-shoulder-hoodie-3",
-      "name": "Essential Heavyweight Drop-Shoulder Hoodie",
+      "name": "Essential Heavyweight Drop-Shoulder Hoodie — Peace",
       "style": "Heavyweight",
-      "description": null,
-      "details": [],
-      "material": null,
-      "fit": null,
+      "description": "A foundational piece in the Essential collection, made from a substantial 380 gsm heavyweight cotton blend for durability and drape. The drop-shoulder design gives a modern, relaxed fit.",
+      "details": [
+        "Hooded neckline",
+        "Season: winter",
+        "Care: machine wash at 30°C (gentle), do not bleach, tumble dry low, iron low avoiding the print, do not dry clean",
+        "Measurements (cm) — length / shoulder / chest / sleeve: S 67/59/60/54.5 · M 69/61/62/55.3 · L 71/63/64/56.1 · XL 73/65/66/56.9"
+      ],
+      "material": "85% cotton, 15% polyester — 380 gsm (moderate thickness)",
+      "fit": "Oversized fit with dropped shoulders and long sleeves",
       "price": 183.61,
-      "sizes": [],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "colors": [
         {
-          "name": "Mint",
-          "hex": "#A9E8BC",
-          "stock": {}
+          "name": "Light Green",
+          "hex": "#BFE3C0",
+          "stock": {
+            "S": 10,
+            "M": 10,
+            "L": 10,
+            "XL": 10
+          }
         }
       ],
-      "images": [],
+      "images": [
+        {
+          "src": "/img/products/heavyweight-drop-shoulder-hoodie-peace-light-green.jpg",
+          "alt": "Light green heavyweight hoodie with PEACE print",
+          "color": "Light Green"
+        }
+      ],
       "featured": false,
       "isNew": false,
-      "published": false,
+      "published": true,
       "sample": false,
       "createdAt": "2026-10-14"
     },
@@ -678,25 +720,55 @@
     },
     {
       "slug": "oversize-fleeced-hoodie-tom-jerry",
-      "name": "Oversize Fleeced Hoodie",
+      "name": "Oversize Fleeced Hoodie — Tom and Jerry",
       "style": "Oversized",
-      "description": null,
-      "details": [],
-      "material": null,
-      "fit": null,
+      "description": "An oversized fleece hoodie with a loose fit, dropped shoulders and long sleeves. An easy layer for cooler days, styled with jeans or joggers.",
+      "details": [
+        "Hooded neckline",
+        "Season: autumn / winter",
+        "Care: machine wash at 30°C (gentle), do not bleach, tumble dry low, iron low avoiding the print, do not dry clean"
+      ],
+      "material": "42% cotton, 53% polyester, 5% other fibres — 350 gsm fleece (thick, slight stretch)",
+      "fit": "Loose oversized fit with dropped shoulders and long sleeves",
       "price": 153.52,
-      "sizes": [],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
       "colors": [
+        {
+          "name": "White",
+          "hex": "#F4F4F2",
+          "stock": {
+            "S": 10,
+            "M": 10,
+            "L": 10,
+            "XL": 10
+          }
+        },
         {
           "name": "Black",
           "hex": "#111111",
-          "stock": null
+          "stock": {
+            "S": 10,
+            "M": 10,
+            "L": 10,
+            "XL": 10
+          }
         }
       ],
-      "images": [],
+      "images": [
+        {
+          "src": "/img/products/oversize-fleeced-hoodie-tom-jerry-white.jpg",
+          "alt": "White oversized fleece hoodie with Tom and Jerry logo",
+          "color": "White"
+        }
+      ],
       "featured": false,
       "isNew": false,
-      "published": false,
+      "published": true,
       "sample": false,
       "createdAt": "2026-10-14"
     },

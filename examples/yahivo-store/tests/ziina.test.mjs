@@ -97,12 +97,13 @@ test('real YAHIVO catalogue: Shopify details, owner sizes/stock, hidden third-pa
   const all = store.listProducts({ includeUnpublished: true });
   const published = store.listProducts();
   assert.equal(all.length, 23);
-  assert.equal(published.length, 11);
+  assert.equal(published.length, 14);
   assert.ok(published.every((p) => p.sizes.join() === 'S,M,L,XL' && !p.sample), 'owner-confirmed sizes on live hoodies');
   assert.ok(all.filter((p) => !p.published).every((p) => p.sizes.length === 0), 'hidden designs untouched');
   assert.deepEqual(crownStock(published), { S: 10, M: 10, L: 10, XL: 10 }, 'owner stock: 10 per size');
   assert.equal(store.getSettings().contact.whatsapp, '+971 52 586 6612');
-  assert.ok(!published.some((p) => /toyota|bmw|tom-jerry|drop-shoulder|tonal|portrait/.test(p.slug)), 'third-party/likeness items hidden');
+  assert.ok(!published.some((p) => /toyota|bmw|drop-shoulder-hoodie-[24]|tonal|portrait/.test(p.slug)), 'designs without confirmed rights stay hidden');
+  assert.ok(['essential-heavyweight-drop-shoulder-hoodie-3', 'essential-heavyweight-drop-shoulder-hoodie', 'oversize-fleeced-hoodie-tom-jerry'].every((s) => published.some((p) => p.slug === s && p.images.length)), 'owner-confirmed designs published with photos');
   const crown = published.find((p) => p.slug === 'yahivo-crown-graphic-oversized-hoodie');
   assert.equal(crown.price, 153.52);
   assert.deepEqual(crown.colors.map((c) => c.name), ['Black', 'Klein Blue', 'White']);

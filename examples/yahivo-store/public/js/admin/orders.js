@@ -78,7 +78,7 @@ async function detail(el, id) {
             <div class="field"><label for="pn">Packing notes</label><textarea id="pn" name="packingNotes" maxlength="1000" placeholder="e.g. materials used, gift note, fragile">${esc(o.fulfilment.packingNotes ?? '')}</textarea></div>
             <h3>Payment</h3>
             <div class="field"><label for="ps">Payment status</label><select id="ps" name="paymentStatus">${Object.entries(PAYMENT).map(([k, l]) => `<option value="${k}" ${o.paymentStatus === k ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>
-              <span class="hint">For pay-later order requests, mark “Paid” only after you have actually received the money.</span></div>
+              <span class="hint">For cash on delivery, mark “Paid” only after the cash has actually been collected.</span></div>
             <div class="field"><label for="inn">Internal notes <span class="hint">(never shown to the customer)</span></label><textarea id="inn" name="internalNotes" maxlength="2000">${esc(o.internalNotes ?? '')}</textarea></div>
             <button class="btn" type="submit">Save changes</button>
           </form>

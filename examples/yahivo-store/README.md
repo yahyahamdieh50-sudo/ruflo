@@ -96,7 +96,7 @@ npm run test:e2e   # Playwright/Chromium: admin setup, desktop + mobile purchase
 
 ## Payments
 
-**Current setup: order now, pay later.** No online payment is active. Customers place an *order request*; nothing is charged. You contact them to confirm and arrange payment, then mark the order **Paid** in Admin → Orders once you have the money. Delivery: **Dubai AED 15**, **rest of UAE AED 25** (Admin → Delivery to change).
+**Current setup: cash on delivery.** No online payment is active. Customers place the order and pay cash when it's delivered; nothing is charged online. The confirmation page shows the exact amount to have ready. You confirm the order with the customer, make sure whoever delivers collects the cash, then mark the order **Paid** in Admin → Orders. Delivery: **Dubai AED 15**, **rest of UAE AED 25** (Admin → Delivery to change).
 
 - **No payment provider is configured**, so no payment method is shown to customers.
 - **Ziina (your provider):**
@@ -110,7 +110,7 @@ npm run test:e2e   # Playwright/Chromium: admin setup, desktop + mobile purchase
   2. Set `NGENIUS_API_KEY` and `NGENIUS_OUTLET_REF`. Without `NGENIUS_API_BASE` the store uses the **sandbox** (`https://api-gateway.sandbox.ngenius-payments.com`). For live payments, set `NGENIUS_API_BASE` (and `NGENIUS_REALM`, if your onboarding pack specifies one) to the values Network International gives you.
   3. Customers are sent to Network International's hosted payment page. On return, the server asks N-Genius for the payment state and marks the order **Paid** only if the provider confirms payment **and** the amount matches. The redirect itself is never trusted. Admin → order → *Check payment with Network International* re-checks manually.
   4. ⚠️ This adapter was built from the public N-Genius docs and tested against a mocked provider, **not** a real sandbox account. Make a sandbox payment (and a failed one) before going live. If a customer abandons the payment page, the order stays *Awaiting payment* with its stock reserved; cancel it in the admin to release the stock.
-- **Placeholder:** Admin → Payments → *"Allow order requests without online payment"*. Customers can then submit an order that is clearly labelled as unpaid. You contact them, arrange payment, and mark the order *Paid*. Turn this off when a real provider is live.
+- **Cash on delivery:** Admin → Payments → *"Offer cash on delivery"* (on). Customers order without paying online and pay cash on delivery. Mark the order *Paid* once the cash is collected. You can keep it on alongside an online provider.
 - **Stripe (card payments):**
   1. Create a Stripe account for the business and complete activation for the UAE / AED.
   2. Set `STRIPE_SECRET_KEY` (use test mode `sk_test_…` first).
@@ -154,7 +154,7 @@ Chosen setup: [Render](https://render.com) **Starter** web service plus a 1 GB p
 | `YAHIVO_UPLOADS` | `/var/data/uploads` |
 | `ADMIN_PASSWORD` | your admin password (never share it or put it in GitHub) |
 
-Leave out the payment and AI keys until you're ready. The store runs with pay-later orders and the demo assistant.
+Leave out the payment and AI keys until you're ready. The store runs with cash on delivery and the demo assistant.
 
 **5. Deploy:** click **Create Web Service**. After a few minutes, check it at the `…onrender.com` address Render shows. Log in at `/admin` and check the products, delivery fees and policies.
 
@@ -185,7 +185,7 @@ Admin → Dashboard shows this live. Today, everything below is still needed fro
 - [ ] **Couriers** you use (for the manual tracking workflow)
 - [ ] **Packing options**, fees and materials
 - [ ] **Tax settings**, confirmed with your accountant. Nothing is assumed; tax is off.
-- [ ] **Ziina**: finish account verification, create an API key, set `ZIINA_API_TOKEN`, run a test payment, then set `ZIINA_LIVE=1`. Decide whether to keep the pay-later placeholder.
+- [ ] **Ziina**: finish account verification, create an API key, set `ZIINA_API_TOKEN`, run a test payment, then set `ZIINA_LIVE=1`. Optional: cash on delivery works without it.
 - [ ] Optional: opening hours
 - [ ] **Social profile URLs** for Facebook, Instagram and TikTok. The links you sent are the Facebook Accounts Centre/settings page and the Instagram home page, not profile pages, so they were not added. TikTok was not provided.
 - [ ] **Review the adapted policies**, and have the privacy page legally reviewed

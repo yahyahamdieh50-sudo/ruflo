@@ -122,12 +122,12 @@ test('real YAHIVO catalogue: Shopify details, owner sizes/stock, hidden third-pa
   store.close();
 });
 
-test('real store settings: pay-later orders with Dubai AED 15 / rest of UAE AED 25 delivery', async () => {
+test('real store settings: cash-on-delivery orders with Dubai AED 15 / rest of UAE AED 25 delivery', async () => {
   const { quote, placeOrder, paymentMethods } = await import('../lib/checkout.mjs');
   const store = new Store(':memory:', { seed: 'yahivo' });
   const settings = store.getSettings();
   const methods = paymentMethods(settings, {});
-  assert.deepEqual(methods.map((m) => m.id), ['manual'], 'no online payment — order now, pay later');
+  assert.deepEqual(methods.map((m) => m.id), ['manual'], 'cash on delivery only');
   const items = [{ slug: 'yahivo-crown-graphic-oversized-hoodie', color: 'Klein Blue', size: 'L', qty: 2 }];
   const ctx = { settings, products: store.listProducts(), methods };
   const dubai = quote({ items, country: 'United Arab Emirates', region: 'Dubai' }, ctx);

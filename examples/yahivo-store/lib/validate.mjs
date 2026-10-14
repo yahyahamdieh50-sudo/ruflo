@@ -122,7 +122,8 @@ export function validateProduct(input) {
   const p = input && typeof input === 'object' ? input : {};
   const ck = new Checker();
   const sizes = Array.isArray(p.sizes) ? [...new Set(p.sizes.map((s) => String(s).trim().toUpperCase()))] : [];
-  if (!sizes.length || sizes.length > 12 || !sizes.every((s) => SIZE_RE.test(s))) ck.fail('sizes', 'Add at least one valid size (e.g. S, M, L, XL).');
+  // An empty list means "sizes not confirmed yet": the product shows but can't be ordered.
+  if (sizes.length > 12 || !sizes.every((s) => SIZE_RE.test(s))) ck.fail('sizes', 'Use valid sizes (e.g. S, M, L, XL).');
   const colors = Array.isArray(p.colors) ? p.colors.slice(0, 20) : [];
   if (!colors.length) ck.fail('colors', 'Add at least one colour.');
   const outColors = colors.map((c, i) => {
@@ -139,6 +140,7 @@ export function validateProduct(input) {
   const images = (Array.isArray(p.images) ? p.images : []).slice(0, 12).map((img, i) => ({
     src: ck.url(`images.${i}.src`, img?.src, 'Image', { allowRelative: true }),
     alt: ck.text(`images.${i}.alt`, img?.alt, 'Image description', { max: 160 }) ?? '',
+    ...(img?.color ? { color: ck.text(`images.${i}.color`, img.color, 'Image colour', { max: 40 }) } : {}),
   }));
   const details = (Array.isArray(p.details) ? p.details : []).slice(0, 15)
     .map((d, i) => ck.text(`details.${i}`, d, 'Detail', { max: 160 })).filter(Boolean);

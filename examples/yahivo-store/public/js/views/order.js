@@ -13,7 +13,7 @@ export default async function order(main, ctx) {
     ({ order: o } = await api(`/api/orders/${params[0]}`));
     // Card payment still pending (e.g. just back from the payment page): the server
     // confirms with the provider — the redirect itself is never trusted.
-    if (o.paymentStatus === 'awaiting_payment' && o.payment.method === 'ngenius') {
+    if (o.paymentStatus === 'awaiting_payment' && ['ngenius', 'ziina'].includes(o.payment.method)) {
       ({ order: o } = await api(`/api/orders/${params[0]}/verify-payment`, { method: 'POST', body: {} }).catch(() => ({ order: o })));
     }
   } catch (e) {

@@ -28,7 +28,11 @@ export default async function product(main, ctx) {
 
   const views = () => {
     const c = p.colors.find((x) => x.name === state.color);
-    if (p.images.length) return p.images.map((img) => `<img src="${esc(img.src)}" alt="${esc(img.alt || p.name)}" decoding="async">`);
+    if (p.images.length) {
+      // Photos tagged with a colour follow the colour picker; untagged photos always show.
+      const forColor = p.images.filter((img) => !img.color || img.color === state.color);
+      return (forColor.length ? forColor : p.images).map((img) => `<img src="${esc(img.src)}" alt="${esc(img.alt || p.name)}" decoding="async">`);
+    }
     return [hoodieSvg(c.hex, { view: 'front', label: `${p.name} in ${c.name}, front (illustration — photo coming soon)` }), hoodieSvg(c.hex, { view: 'back', label: `${p.name} in ${c.name}, back (illustration)` })];
   };
 
@@ -98,17 +102,20 @@ export default async function product(main, ctx) {
   const renderOptions = () => {
     main.querySelectorAll('.color-opt').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.color === state.color)));
     $('#color-val').textContent = state.color;
-    $('#size-opts').innerHTML = p.sizes.map((s) => {
+    const sizesKnown = p.sizes.length > 0;
+    const colorSoldOut = !colorHasStock(p.colors.find((c) => c.name === state.color));
+    $('#size-opts').innerHTML = sizesKnown ? '' : '<p class="muted">Sizes for this hoodie haven’t been confirmed yet.</p>';
+    $('#size-opts').innerHTML += p.sizes.map((s) => {
       const n = stockFor(state.color, s);
       const sold = n === 0;
       return `<button type="button" class="size-opt${sold ? ' sold' : ''}" data-size="${esc(s)}" aria-pressed="${state.size === s}" ${sold ? 'aria-disabled="true"' : ''} aria-label="${esc(s)}${sold ? ' (sold out)' : ''}">${esc(s)}</button>`;
     }).join('');
     const line = $('#stock-line');
     const max = state.size ? stockFor(state.color, state.size) : null;
-    if (!state.size) {
-      const anyStock = p.colors.find((c) => c.name === state.color);
-      line.innerHTML = colorHasStock(anyStock) ? '<span class="muted">Select a size to see availability.</span>' : '<span class="dot out"></span> This colour is sold out.';
-    } else if (max === null) line.innerHTML = '<span class="muted">Stock isn’t tracked for this item — availability is confirmed after you order.</span>';
+    if (colorSoldOut) line.innerHTML = `<span class="dot out"></span> ${p.colors.length > 1 ? 'This colour is sold out.' : 'Sold out.'}`;
+    else if (!sizesKnown) line.innerHTML = '<span class="muted">Online ordering opens once sizes are confirmed — <a href="/contact" data-link>contact us</a> to order now.</span>';
+    else if (!state.size) line.innerHTML = '<span class="muted">Select a size to see availability.</span>';
+    else if (max === null) line.innerHTML = '<span class="muted">Stock isn’t tracked for this item — availability is confirmed after you order.</span>';
     else if (max === 0) line.innerHTML = '<span class="dot out"></span> Sold out in this size.';
     else if (max <= 3) line.innerHTML = `<span class="dot low"></span> Only ${max} left in ${esc(state.size)}.`;
     else line.innerHTML = `<span class="dot"></span> In stock in ${esc(state.size)}.`;
@@ -117,14 +124,17 @@ export default async function product(main, ctx) {
     $('#qty').textContent = state.qty;
     $('#qty-dec').disabled = state.qty <= 1;
     $('#qty-inc').disabled = state.qty >= cap;
-    const soldOut = max === 0;
-    $('#atc').disabled = soldOut;
-    $('#atc').textContent = soldOut ? 'Sold out' : `Add to cart — ${money(p.price * state.qty)}`;
+    const soldOut = max === 0 || colorSoldOut;
+    const blocked = soldOut || !sizesKnown;
+    $('#atc').disabled = blocked;
+    $('#sa-btn').disabled = blocked;
+    $('#atc').textContent = soldOut ? 'Sold out' : !sizesKnown ? 'Sizes coming soon' : `Add to cart — ${money(p.price * state.qty)}`;
     $('#sa-sel').textContent = `${state.color} · ${state.size ?? 'Choose size'} · ${money(p.price)}`;
   };
 
   const add = () => {
     const err = $('#atc-error');
+    if (!p.sizes.length || !colorHasStock(p.colors.find((c) => c.name === state.color))) return;
     if (!state.size) {
       err.textContent = 'Please choose a size.';
       err.hidden = false;

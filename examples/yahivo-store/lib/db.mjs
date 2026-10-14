@@ -38,21 +38,27 @@ const now = () => new Date().toISOString();
 const readSeed = (f) => JSON.parse(readFileSync(path.join(SEED_DIR, f), 'utf8'));
 
 export class Store {
-  constructor(file = process.env.YAHIVO_DB || DEFAULT_DB, { seedSample = process.env.YAHIVO_SEED_SAMPLE !== '0' } = {}) {
+  /**
+   * @param {string} file  database path (':memory:' for tests)
+   * @param {{ seed?: 'yahivo'|'sample'|'none' }} opts  catalogue loaded into an empty database:
+   *   'yahivo' = the real catalogue (default), 'sample' = test products, 'none' = empty.
+   */
+  constructor(file = process.env.YAHIVO_DB || DEFAULT_DB, { seed = process.env.YAHIVO_SEED || 'yahivo' } = {}) {
     if (file !== ':memory:') mkdirSync(path.dirname(file), { recursive: true });
     this.db = new DatabaseSync(file);
     this.db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
     this.db.exec(SCHEMA);
-    this.#seed(seedSample);
+    this.#seed(seed);
   }
 
-  #seed(seedSample) {
+  #seed(seed) {
     if (!this.db.prepare('SELECT 1 FROM settings WHERE id = 1').get()) {
       this.db.prepare('INSERT INTO settings (id, data, updated_at) VALUES (1, ?, ?)').run(JSON.stringify(readSeed('settings.json')), now());
     }
     const count = this.db.prepare('SELECT COUNT(*) AS n FROM products').get().n;
-    if (count === 0 && seedSample) {
-      for (const p of readSeed('products.sample.json').products) this.upsertProduct(validateProduct(p));
+    const files = { yahivo: 'products.yahivo.json', sample: 'products.sample.json' };
+    if (count === 0 && files[seed]) {
+      for (const p of readSeed(files[seed]).products) this.upsertProduct(validateProduct(p));
     }
   }
 

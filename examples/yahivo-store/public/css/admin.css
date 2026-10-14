@@ -1,6 +1,7 @@
 body.admin { background: #f5f4f0; }
 .admin-top { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px var(--gutter); background: var(--ink); color: #fff; }
-.admin-top .logo { font-size: 1.3rem; color: #fff; margin: 0; }
+.admin-top .logo { font-size: 1.3rem; color: #fff; margin: 0; display: flex; align-items: center; gap: 10px; }
+.admin-top .logo img { height: 20px; width: auto; }
 .admin-top-actions { display: flex; gap: 8px; }
 .admin-shell { display: grid; min-height: calc(100vh - 62px); }
 .admin-nav { display: flex; overflow-x: auto; gap: 4px; padding: 8px var(--gutter); background: #fff; border-bottom: 2px solid var(--ink); position: sticky; top: 62px; z-index: 20; }

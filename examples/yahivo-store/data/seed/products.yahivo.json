@@ -1,0 +1,623 @@
+{
+  "_comment": "YAHIVO catalogue transcribed from the owner's screen recording of yahivo.com (2026-10-14). Names, prices (AED) and sold-out status are from the recording. Sizes, stock quantities, descriptions and materials were NOT shown, so they are empty — add them in Admin → Products. Products with published=false carry third-party brands/characters or a real person's likeness and are hidden until the owner confirms the rights. Photos are cropped from the recording (low resolution) — replace with originals.",
+  "products": [
+    {
+      "slug": "yahivo-crown-graphic-oversized-hoodie",
+      "name": "YAHIVO Crown Graphic Oversized Hoodie",
+      "style": "Oversized",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 153.52,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#111111",
+          "stock": null
+        },
+        {
+          "name": "Klein Blue",
+          "hex": "#3B1FD6",
+          "stock": null
+        },
+        {
+          "name": "White",
+          "hex": "#F4F4F2",
+          "stock": null
+        }
+      ],
+      "images": [
+        {
+          "src": "/img/products/yahivo-crown-graphic-oversized-hoodie-black.jpg",
+          "alt": "YAHIVO Crown Graphic hoodie in black",
+          "color": "Black"
+        },
+        {
+          "src": "/img/products/yahivo-crown-graphic-oversized-hoodie-klein-blue.jpg",
+          "alt": "YAHIVO Crown Graphic hoodie in Klein blue",
+          "color": "Klein Blue"
+        },
+        {
+          "src": "/img/products/yahivo-crown-graphic-oversized-hoodie-white.jpg",
+          "alt": "YAHIVO Crown Graphic hoodie in white",
+          "color": "White"
+        }
+      ],
+      "featured": true,
+      "isNew": false,
+      "published": true,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "yahivo-mine-couples-hoodie-black",
+      "name": "YAHIVO \"Mine\" Couples Hoodie — Black",
+      "style": "Couples",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 131.56,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#111111",
+          "stock": null
+        }
+      ],
+      "images": [
+        {
+          "src": "/img/products/yahivo-mine-couples-hoodie-black.jpg",
+          "alt": "Black hoodie with \"Mine\" print"
+        }
+      ],
+      "featured": true,
+      "isNew": false,
+      "published": true,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "yahivo-yours-couples-hoodie-pink",
+      "name": "YAHIVO \"Yours\" Couples Hoodie — Pink",
+      "style": "Couples",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 131.56,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Pink",
+          "hex": "#F2A9C7",
+          "stock": null
+        }
+      ],
+      "images": [
+        {
+          "src": "/img/products/yahivo-yours-couples-hoodie-pink.jpg",
+          "alt": "Pink hoodie with \"Yours\" print"
+        }
+      ],
+      "featured": true,
+      "isNew": false,
+      "published": true,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "yahivo-pink-ride-heavyweight-hoodie-pink",
+      "name": "YAHIVO Pink Ride Heavyweight Hoodie — Pink",
+      "style": "Heavyweight",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 212.81,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Pink",
+          "hex": "#F5B3CC",
+          "stock": null
+        }
+      ],
+      "images": [
+        {
+          "src": "/img/products/yahivo-pink-ride-heavyweight-hoodie-pink.jpg",
+          "alt": "Pink heavyweight hoodie with YAHIVO Pink Ride graphic"
+        }
+      ],
+      "featured": true,
+      "isNew": false,
+      "published": true,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "yahivo-script-oversized-fleece-hoodie-pink-apricot",
+      "name": "YAHIVO Script Oversized Fleece Hoodie — Pink / Apricot",
+      "style": "Oversized",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 153.52,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Pink / Apricot",
+          "hex": "#F2A9C7",
+          "stock": null
+        }
+      ],
+      "images": [
+        {
+          "src": "/img/products/yahivo-script-oversized-fleece-hoodie-pink.jpg",
+          "alt": "Pink oversized hoodie with YAHIVO script print"
+        }
+      ],
+      "featured": false,
+      "isNew": false,
+      "published": true,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "oversize-fleeced-hoodie",
+      "name": "Oversize Fleeced Hoodie",
+      "style": "Oversized",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 153.52,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#111111",
+          "stock": null
+        }
+      ],
+      "images": [
+        {
+          "src": "/img/products/oversize-fleeced-hoodie-logo.jpg",
+          "alt": "Black oversized hoodie with YAHIVO logo"
+        }
+      ],
+      "featured": false,
+      "isNew": false,
+      "published": true,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "oversize-fleeced-hoodie-4",
+      "name": "Oversize Fleeced Hoodie",
+      "style": "Oversized",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 153.52,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#111111",
+          "stock": null
+        }
+      ],
+      "images": [
+        {
+          "src": "/img/products/oversize-fleeced-hoodie-logo-large.jpg",
+          "alt": "Black oversized hoodie with large YAHIVO logo"
+        }
+      ],
+      "featured": false,
+      "isNew": false,
+      "published": true,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "brooklyn-varsity-oversized-hoodie-flower-gray",
+      "name": "Brooklyn Varsity Oversized Hoodie — Flower Gray",
+      "style": "Oversized",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 131.56,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Flower Gray",
+          "hex": "#9C9C9A",
+          "stock": null
+        }
+      ],
+      "images": [],
+      "featured": false,
+      "isNew": false,
+      "published": true,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "yahivo-arabic-typography-oversized-hoodie",
+      "name": "YAHIVO Arabic Typography Oversized Hoodie",
+      "style": "Oversized",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 183.0,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Mint",
+          "hex": "#A9E8BC",
+          "stock": {}
+        }
+      ],
+      "images": [
+        {
+          "src": "/img/products/yahivo-arabic-typography-oversized-hoodie.jpg",
+          "alt": "Mint oversized hoodie with Arabic typography"
+        }
+      ],
+      "featured": false,
+      "isNew": false,
+      "published": true,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "yahivo-coffee-graphic-oversized-hoodie",
+      "name": "YAHIVO Coffee Graphic Oversized Hoodie",
+      "style": "Oversized",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 176.26,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Sage",
+          "hex": "#B8B497",
+          "stock": {}
+        }
+      ],
+      "images": [
+        {
+          "src": "/img/products/yahivo-coffee-graphic-oversized-hoodie.jpg",
+          "alt": "Model wearing the sage YAHIVO Coffee Graphic hoodie"
+        }
+      ],
+      "featured": false,
+      "isNew": false,
+      "published": true,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "yahivo-logo-oversized-fleece-hoodie",
+      "name": "YAHIVO Logo Oversized Fleece Hoodie",
+      "style": "Oversized",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 146.88,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#111111",
+          "stock": {}
+        }
+      ],
+      "images": [],
+      "featured": false,
+      "isNew": false,
+      "published": true,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "essential-fleece-mock-neck-crew-sweatshirt",
+      "name": "Essential Fleece Mock-Neck Crew Sweatshirt",
+      "style": "Sweatshirt",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 159.62,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#111111",
+          "stock": null
+        }
+      ],
+      "images": [],
+      "featured": false,
+      "isNew": false,
+      "published": false,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "essential-heavyweight-boxy-fleece-hoodie",
+      "name": "Essential Heavyweight Boxy Fleece Hoodie",
+      "style": "Heavyweight",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 253.0,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#111111",
+          "stock": null
+        }
+      ],
+      "images": [],
+      "featured": false,
+      "isNew": false,
+      "published": false,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "essential-heavyweight-drop-shoulder-hoodie",
+      "name": "Essential Heavyweight Drop-Shoulder Hoodie",
+      "style": "Heavyweight",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 172.26,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Sage",
+          "hex": "#B8B497",
+          "stock": {}
+        }
+      ],
+      "images": [],
+      "featured": false,
+      "isNew": false,
+      "published": false,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "essential-heavyweight-drop-shoulder-hoodie-2",
+      "name": "Essential Heavyweight Drop-Shoulder Hoodie",
+      "style": "Heavyweight",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 183.0,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Mint",
+          "hex": "#A9E8BC",
+          "stock": {}
+        }
+      ],
+      "images": [],
+      "featured": false,
+      "isNew": false,
+      "published": false,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "essential-heavyweight-drop-shoulder-hoodie-3",
+      "name": "Essential Heavyweight Drop-Shoulder Hoodie",
+      "style": "Heavyweight",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 183.61,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Mint",
+          "hex": "#A9E8BC",
+          "stock": {}
+        }
+      ],
+      "images": [],
+      "featured": false,
+      "isNew": false,
+      "published": false,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "essential-heavyweight-drop-shoulder-hoodie-4",
+      "name": "Essential Heavyweight Drop-Shoulder Hoodie",
+      "style": "Heavyweight",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 183.61,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Mint",
+          "hex": "#A9E8BC",
+          "stock": {}
+        }
+      ],
+      "images": [],
+      "featured": false,
+      "isNew": false,
+      "published": false,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "oversize-fleeced-hoodie-toyota",
+      "name": "Oversize Fleeced Hoodie",
+      "style": "Oversized",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 153.52,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#111111",
+          "stock": null
+        }
+      ],
+      "images": [],
+      "featured": false,
+      "isNew": false,
+      "published": false,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "oversize-fleeced-hoodie-tom-jerry",
+      "name": "Oversize Fleeced Hoodie",
+      "style": "Oversized",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 153.52,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#111111",
+          "stock": null
+        }
+      ],
+      "images": [],
+      "featured": false,
+      "isNew": false,
+      "published": false,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "oversize-fleeced-hoodie-bmw",
+      "name": "Oversize Fleeced Hoodie",
+      "style": "Oversized",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 153.52,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#111111",
+          "stock": null
+        }
+      ],
+      "images": [],
+      "featured": false,
+      "isNew": false,
+      "published": false,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "streetwear-unisex-fleece-hoodie",
+      "name": "Streetwear Unisex Fleece Hoodie",
+      "style": "Fleece",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 159.62,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#111111",
+          "stock": null
+        }
+      ],
+      "images": [],
+      "featured": false,
+      "isNew": false,
+      "published": false,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "yahivo-arabic-quote-portrait-hoodie-black",
+      "name": "YAHIVO Arabic Quote Portrait Hoodie — Black",
+      "style": "Oversized",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 216.7,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#111111",
+          "stock": {}
+        }
+      ],
+      "images": [],
+      "featured": false,
+      "isNew": false,
+      "published": false,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    },
+    {
+      "slug": "yahivo-tonal-print-heavyweight-hoodie-white-black",
+      "name": "YAHIVO Tonal Print Heavyweight Hoodie — White / Black",
+      "style": "Heavyweight",
+      "description": null,
+      "details": [],
+      "material": null,
+      "fit": null,
+      "price": 190.77,
+      "sizes": [],
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#111111",
+          "stock": null
+        }
+      ],
+      "images": [],
+      "featured": false,
+      "isNew": false,
+      "published": false,
+      "sample": false,
+      "createdAt": "2026-10-14"
+    }
+  ]
+}

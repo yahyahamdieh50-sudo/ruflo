@@ -28,7 +28,7 @@ async function mockFetch(url, init = {}) {
 
 before(async () => {
   app = createApp({
-    store: new Store(':memory:'),
+    store: new Store(':memory:', { seed: 'sample' }),
     env: { ADMIN_PASSWORD, SITE_URL: 'https://shop.example', NGENIUS_API_KEY: 'base64key', NGENIUS_OUTLET_REF: 'outlet-1' },
     fetchImpl: mockFetch,
   });

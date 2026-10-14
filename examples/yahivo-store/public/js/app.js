@@ -127,7 +127,8 @@ async function initShell() {
   try {
     const s = await getSettings();
     setLocale(s.currency, s.locale);
-    if (s.logo) document.getElementById('logo-slot').innerHTML = `<img src="${esc(s.logo)}" alt="${esc(s.brand)}" width="120" height="34">`;
+    if (s.logo) document.getElementById('logo-slot').innerHTML = `<img src="${esc(s.logo)}" alt="${esc(s.brand)}">`;
+    if (s.logoLight) document.getElementById('footer-logo').innerHTML = `<img src="${esc(s.logoLight)}" alt="${esc(s.brand)}" loading="lazy">`;
     if (s.sampleData) {
       const banner = document.getElementById('sample-banner');
       banner.innerHTML = 'Preview store: products, prices and stock shown are <strong>sample data</strong>, not real YAHIVO items.';

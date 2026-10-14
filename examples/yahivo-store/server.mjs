@@ -13,6 +13,13 @@ import { applySection, launchChecklist, publicSettings, SECTIONS } from './lib/s
 import { answer, assistantMode } from './lib/assistant.mjs';
 import { createCheckoutSession, stripeConfigured, verifyWebhook } from './lib/stripe.mjs';
 import { createNgeniusOrder, ngeniusConfigured, ngeniusStatus } from './lib/ngenius.mjs';
+import { createZiinaPayment, ziinaConfigured, ziinaLive, ziinaStatus } from './lib/ziina.mjs';
+
+// Hosted-payment-page providers confirmed server-side via a status lookup.
+const HOSTED = {
+  ziina: { name: 'Ziina', configured: ziinaConfigured, create: createZiinaPayment, status: ziinaStatus },
+  ngenius: { name: 'Network International', configured: ngeniusConfigured, create: createNgeniusOrder, status: ngeniusStatus },
+};
 import { routeMeta, robots, sitemap } from './lib/seo.mjs';
 import { clientIp, HttpError, readBody, readJson, securityHeaders, sendJson, serveStatic } from './lib/http.mjs';
 import { validateProduct, ValidationError } from './lib/validate.mjs';
@@ -34,7 +41,7 @@ export function createApp({ store = new Store(), env = process.env, fetchImpl = 
   const stripe = () => stripeConfigured(env);
   const ctx = () => {
     const settings = store.getSettings();
-    return { settings, products: store.listProducts(), methods: paymentMethods(settings, { stripe: stripe(), ngenius: ngeniusConfigured(env) }) };
+    return { settings, products: store.listProducts(), methods: paymentMethods(settings, { stripe: stripe(), ngenius: ngeniusConfigured(env), ziina: ziinaConfigured(env) }) };
   };
   const limit = (req, bucket, n, ms) => {
     if (!limiter.allow(`${bucket}:${clientIp(req)}`, n, ms)) throw new HttpError(429, 'Too many requests. Please wait a moment and try again.');
@@ -74,15 +81,15 @@ export function createApp({ store = new Store(), env = process.env, fetchImpl = 
       const c = ctx();
       const placed = placeOrder(await readJson(req), { store, settings: c.settings, methods: c.methods });
       let redirectUrl = null;
-      if (placed.method === 'stripe' || placed.method === 'ngenius') {
+      if (placed.method === 'stripe' || HOSTED[placed.method]) {
         const order = store.getOrder(placed.id);
         try {
           if (placed.method === 'stripe') redirectUrl = (await createCheckoutSession(order, { siteUrl, env, fetchImpl })).url;
           else {
-            const ng = await createNgeniusOrder(order, { siteUrl, env, fetchImpl });
-            order.payment = { ...order.payment, providerRef: ng.reference };
+            const session = await HOSTED[placed.method].create(order, { siteUrl, env, fetchImpl });
+            order.payment = { ...order.payment, providerRef: session.reference };
             store.saveOrder(order);
-            redirectUrl = ng.url;
+            redirectUrl = session.url;
           }
         } catch (e) {
           console.error(`[${placed.method}]`, e.message);
@@ -103,24 +110,26 @@ export function createApp({ store = new Store(), env = process.env, fetchImpl = 
       limit(req, 'verify', 20, 60_000);
       const order = store.getOrderByToken(match[1]);
       if (!order) throw new HttpError(404, 'Order not found.');
-      if (order.payment.method === 'ngenius' && ngeniusConfigured(env) && order.paymentStatus === 'awaiting_payment') {
+      const provider = HOSTED[order.payment.method];
+      if (provider?.configured(env) && order.paymentStatus === 'awaiting_payment') {
         let result;
         try {
-          result = await ngeniusStatus(order, { env, fetchImpl });
+          result = await provider.status(order, { env, fetchImpl });
         } catch (e) {
-          console.error('[ngenius]', e.message);
+          console.error(`[${order.payment.method}]`, e.message);
           throw new HttpError(502, 'We could not confirm your payment right now. Please refresh in a minute.');
         }
+        const actor = order.payment.method;
         if (result.status === 'paid') {
           order.paymentStatus = 'paid';
           store.saveOrder(order);
-          store.addEvent(order.id, { type: 'payment', note: `Payment confirmed by Network International (${result.states.join(', ')}).`, actor: 'ngenius' });
+          store.addEvent(order.id, { type: 'payment', note: `Payment confirmed by ${provider.name} (${result.states.join(', ')}).`, actor });
         } else if (result.status === 'failed') {
           order.paymentStatus = 'failed';
           store.saveOrder(order);
-          store.addEvent(order.id, { type: 'payment', note: `Payment failed at Network International (${result.states.join(', ')}). Stock is still reserved — cancel the order to release it.`, actor: 'ngenius' });
+          store.addEvent(order.id, { type: 'payment', note: `Payment failed at ${provider.name} (${result.states.join(', ')}). Stock is still reserved — cancel the order to release it.`, actor });
         } else if (result.status === 'mismatch') {
-          store.addEvent(order.id, { type: 'payment', note: 'Provider reported payment but the amount did not match the order total — check manually.', actor: 'ngenius' });
+          store.addEvent(order.id, { type: 'payment', note: `${provider.name} reported payment but the amount did not match the order total — check manually.`, actor });
         }
       }
       return sendJson(res, 200, { order: publicOrder(store, store.getOrder(order.id)) });
@@ -181,10 +190,10 @@ export function createApp({ store = new Store(), env = process.env, fetchImpl = 
       const { counts } = store.listOrders({ limit: 1 });
       const aiLive = (await assistantMode(env)) === 'live';
       return sendJson(res, 200, {
-        checklist: launchChecklist(settings, products, { stripe: stripe() || ngeniusConfigured(env), aiLive, adminPasswordSet: auth.enabled }),
+        checklist: launchChecklist(settings, products, { stripe: stripe() || ngeniusConfigured(env) || ziinaConfigured(env), aiLive, adminPasswordSet: auth.enabled }),
         orderCounts: counts,
         integrations: {
-          payments: [ngeniusConfigured(env) && `Network International N-Genius configured (${env.NGENIUS_API_BASE ? 'custom API base' : 'SANDBOX'}) — run a test payment before launch`, stripe() && 'Stripe configured — run a test payment before launch'].filter(Boolean).join(' · ') || 'No payment provider configured',
+          payments: [ziinaConfigured(env) && `Ziina configured (${ziinaLive(env) ? 'LIVE' : 'TEST mode'}) — run a test payment before launch`, ngeniusConfigured(env) && `Network International N-Genius configured (${env.NGENIUS_API_BASE ? 'custom API base' : 'SANDBOX'}) — run a test payment before launch`, stripe() && 'Stripe configured — run a test payment before launch'].filter(Boolean).join(' · ') || 'No payment provider configured',
           courier: 'Manual workflow — no courier API connected',
           assistant: aiLive ? 'Live (Claude)' : 'Demo mode',
         },

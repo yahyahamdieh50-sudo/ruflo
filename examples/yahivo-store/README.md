@@ -37,11 +37,13 @@ On first start the database is created with **sample products** (clearly bannere
 | `SITE_URL` | Public URL, e.g. `https://shop.yahivo.com`. Used for canonical/social links; `https://` also turns on secure cookies. |
 | `ANTHROPIC_API_KEY` | Turns the assistant from demo to live (see below). |
 | `YAHIVO_AI_MODEL` | Optional model override (default `claude-opus-5-5`). |
+| `ZIINA_API_TOKEN` | Turn on Ziina payments (test mode). |
+| `ZIINA_LIVE=1` | Switch Ziina from test mode to live payments (only after a successful test payment). |
 | `NGENIUS_API_KEY`, `NGENIUS_OUTLET_REF` | Turn on card payments via Network International N-Genius (sandbox by default). |
 | `NGENIUS_API_BASE`, `NGENIUS_REALM` | Live API base URL and realm name from your Network International onboarding. |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Turn on card payments via Stripe Checkout. |
 | `YAHIVO_DB` | Database file path (default `data/yahivo.db`). |
-| `YAHIVO_SEED_SAMPLE=0` | Start with no sample products. |
+| `YAHIVO_SEED` | Catalogue loaded into a new, empty database: `yahivo` (default, your real products), `sample` (test data) or `none`. |
 | `TRUST_PROXY=1` | Only behind a reverse proxy: use `X-Forwarded-For` for rate limiting. |
 
 Keep secrets in environment variables or an uncommitted `.env` that your process manager loads. They are only read on the server and never sent to the browser.
@@ -50,7 +52,7 @@ Keep secrets in environment variables or an uncommitted `.env` that your process
 
 ```bash
 npm run check      # syntax, seed data, 500-line limit, no secret values in public/
-npm test           # 36 unit + API tests (in-memory DB, mocked payment provider)
+npm test           # 41 unit + API tests (in-memory DB, mocked Ziina / N-Genius)
 npm run test:e2e   # Playwright/Chromium: admin setup, desktop + mobile purchase, fulfilment, slip/CSV/privacy, assistant
 ```
 
@@ -77,9 +79,26 @@ npm run test:e2e   # Playwright/Chromium: admin setup, desktop + mobile purchase
 4. The customer's order page shows the courier, tracking number and tracking link.
 5. When the courier confirms delivery, set **Delivered**.
 
+## Your catalogue (imported 2026-10-14)
+
+`data/seed/products.yahivo.json` holds the hoodies from your screen recording of yahivo.com: exact names, AED prices, colours and sold-out status. A new database starts with this catalogue (set `YAHIVO_SEED=sample` for test data). If you already ran the store with sample data, delete `data/yahivo.db` once to reload it.
+
+- **Published (11):** YAHIVO Crown Graphic (Black / Klein Blue / White), "Mine" and "Yours" couples hoodies, Pink Ride, Script Pink / Apricot, Oversize Fleeced Hoodie ×2 (YAHIVO logo) and Brooklyn Varsity are available. Arabic Typography, Coffee Graphic and Logo Oversized Fleece are shown as sold out.
+- **Hidden (12), until you confirm you hold the rights:** these designs use third-party brands or characters (Nike, adidas, Toyota, BMW, Maserati, Pink Panther, Bugs Bunny, Tom & Jerry, the Simpsons, Joker) or a real person's portrait. Selling them without a licence is a legal risk, and payment providers generally prohibit it. Admin → Products → tick **Published** to show one.
+- **Not imported:** the 5 T-shirts (Essential Cotton ×3, Rebel Rabbit, Unisex Oversized) because this store sells hoodies only.
+- **Not in the recording, so left empty:** sizes, stock quantities, descriptions and materials. Products without sizes show "Sizes coming soon" and can't be ordered yet. Add sizes and stock in Admin → Products.
+- **Photos** are cropped from the recording (about 400px). Upload the original files for sharp images. Brooklyn Varsity and Logo Oversized Fleece had no visible photo.
+- **Logo:** your logo is used in the header, footer, favicon and social share image (`public/img/logo-*.png`).
+
 ## Payments
 
 - **No payment provider is configured**, so no payment method is shown to customers.
+- **Ziina (your provider):**
+  1. Finish Ziina business verification. Your Ziina app shows **"Resubmit documents"**, so the account isn't verified yet; payments can't go live until Ziina approves it.
+  2. In Ziina, create an **API key** with the payment-intent permission (`write_payment_intents`).
+  3. Set `ZIINA_API_TOKEN` on the server (never in the website files or chat). The store runs Ziina in **test mode** (`test: true`, test cards) until you also set `ZIINA_LIVE=1`.
+  4. Customers pay on Ziina's own page. On return, the server asks Ziina for the payment and marks the order **Paid** only if Ziina reports `completed` **and** the amount matches. Admin → order → *Check payment with Ziina* re-checks manually.
+  5. ⚠️ Built from Ziina's public API docs and tested against a mocked Ziina, not your account. Make a test payment, then one live payment of a small amount, before launch. If a customer abandons the payment page, the order stays *Awaiting payment* with stock reserved; cancel it to release the stock.
 - **Network International N-Genius (UAE card acquirer, recommended for AED):**
   1. Get an N-Genius Online merchant account from Network International. In the N-Genius portal, create a **Service Account API key** and note your **Outlet reference**.
   2. Set `NGENIUS_API_KEY` and `NGENIUS_OUTLET_REF`. Without `NGENIUS_API_BASE` the store uses the **sandbox** (`https://api-gateway.sandbox.ngenius-payments.com`). For live payments, set `NGENIUS_API_BASE` (and `NGENIUS_REALM`, if your onboarding pack specifies one) to the values Network International gives you.
@@ -109,16 +128,18 @@ npm run test:e2e   # Playwright/Chromium: admin setup, desktop + mobile purchase
 
 Admin → Dashboard shows this live. Today, everything below is still needed from you:
 
-- [ ] **Products:** real hoodie names, descriptions, materials, fit, **prices**, sizes, colours and **stock**, then delete or unpublish the SAMPLE items
-- [ ] **Product photos** and the **YAHIVO logo** (the site uses a placeholder wordmark and illustrations)
+- [x] Product names, prices, colours and sold-out status (imported from your recording)
+- [x] YAHIVO logo
+- [ ] **Sizes and stock** for each hoodie (nothing can be ordered until sizes are added)
+- [ ] **Original product photos** (current ones are low-resolution crops), plus descriptions and materials
+- [ ] **Decide on the 12 hidden designs** (third-party brands/characters/portrait)
 - [ ] **Delivery zones and fees** and the delivery estimates you can promise
 - [ ] **Couriers** you use (for the manual tracking workflow)
 - [ ] **Packing options**, fees and materials
 - [ ] **Tax settings**, confirmed with your accountant. Nothing is assumed; tax is off.
-- [ ] **Payment provider**: Network International N-Genius keys (or Stripe), then a sandbox test payment. Decide whether to keep the pay-later placeholder.
+- [ ] **Ziina**: finish account verification, create an API key, set `ZIINA_API_TOKEN`, run a test payment, then set `ZIINA_LIVE=1`. Decide whether to keep the pay-later placeholder.
 - [ ] **Contact details** (email, WhatsApp, phone, address, hours)
 - [ ] **Social profile URLs** for Facebook, Instagram and TikTok. The links you sent are the Facebook Accounts Centre/settings page and the Instagram home page, not profile pages, so they were not added. TikTok was not provided.
 - [ ] **Shipping policy**, **returns/exchanges policy**, privacy contact email, and a legal review of the privacy page
 - [ ] **Size guide measurements**
 - [ ] Optional: `ANTHROPIC_API_KEY` for the live assistant; a GA4 ID (update the privacy policy and cookie consent if you enable it)
-- [ ] A real social share image (the current `public/img/og-default.png` is a placeholder wordmark)

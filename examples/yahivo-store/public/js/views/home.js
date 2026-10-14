@@ -8,14 +8,15 @@ export default async function home(main, { settings, isCurrent }) {
   const featured = products.filter((p) => p.featured).slice(0, 4);
   const fresh = products.filter((p) => p.isNew).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))).slice(0, 4);
   const heroColor = featured[0]?.colors[0]?.hex ?? '#151515';
+  const heroProduct = featured.find((p) => p.images.length && p.availability !== 'sold_out');
   const hero = settings.hero;
   const headline = esc(hero.headline).replace(/(\S+)\.?$/, '<em>$&</em>');
 
   const cats = facets.styles.map((s) => {
-    const sample = products.find((p) => p.style === s.name);
+    const sample = products.find((p) => p.style === s.name && p.images.length) ?? products.find((p) => p.style === s.name);
     const n = products.filter((p) => p.style === s.name).length;
     return `<a class="cat-card" href="/shop?style=${esc(s.id)}" data-link>
-      ${hoodieSvg(sample?.colors[0]?.hex ?? '#151515', { label: '' })}
+      ${sample?.images.length ? `<img class="cat-photo" src="${esc(sample.images[0].src)}" alt="" loading="lazy">` : hoodieSvg(sample?.colors[0]?.hex ?? '#151515', { label: '' })}
       <span class="count">${n} hoodie${n === 1 ? '' : 's'}</span>
       <span class="display">${esc(s.name)}</span>
     </a>`;
@@ -40,7 +41,9 @@ export default async function home(main, { settings, isCurrent }) {
             <a class="btn btn-ghost btn-light" href="/size-guide" data-link>Find your size</a>
           </div>
         </div>
-        <div class="hero-art" aria-hidden="true">${hoodieSvg(heroColor, { label: '' })}</div>
+        <div class="hero-art">${heroProduct?.images.length
+          ? `<a class="hero-photo" href="/product/${esc(heroProduct.slug)}" data-link><img src="${esc(heroProduct.images[0].src)}" alt="${esc(heroProduct.images[0].alt || heroProduct.name)}"><span class="hero-tag">${esc(heroProduct.name)}</span></a>`
+          : `<div aria-hidden="true">${hoodieSvg(heroColor, { label: '' })}</div>`}</div>
       </div>
     </section>
     <div class="ticker" aria-hidden="true"><span>${'Hoodies — YAHIVO — '.repeat(12)}</span></div>

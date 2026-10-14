@@ -57,6 +57,8 @@ export function recommend(products, prefs, limit = 3) {
     if (prefs.styles.length && !prefs.styles.includes(p.style)) return false;
     const colors = prefs.colors.length ? p.colors.filter((c) => prefs.colors.includes(c.name)) : p.colors;
     if (!colors.length) return false;
+    // Sizes not confirmed yet: only suggest it when no size was requested and it isn't sold out.
+    if (!p.sizes.length) return !prefs.size && colors.some((c) => !c.stock);
     const sizes = prefs.size ? [prefs.size] : p.sizes;
     return colors.some((c) => sizes.some((s) => { const n = stockOf(p, c.name, s); return n === null || n > 0; }));
   }).sort((a, b) => Number(b.featured) - Number(a.featured)).slice(0, limit);
@@ -101,7 +103,9 @@ export function demoReply(message, { settings, products }) {
   }
   const named = products.find((p) => message.toLowerCase().includes(p.name.toLowerCase()));
   if (named && !has(message, ['recommend', 'suggest'])) {
-    const stockText = named.colors.map((c) => `${c.name}: ${named.sizes.map((s) => { const n = stockOf(named, c.name, s); return `${s} ${n === null ? '(ask)' : n > 0 ? '✓' : 'sold out'}`; }).join(', ')}`).join('\n');
+    const stockText = named.sizes.length
+      ? named.colors.map((c) => `${c.name}: ${named.sizes.map((s) => { const n = stockOf(named, c.name, s); return `${s} ${n === null ? '(ask)' : n > 0 ? '✓' : 'sold out'}`; }).join(', ')}`).join('\n')
+      : `Colours: ${named.colors.map((c) => `${c.name}${c.stock ? ' (sold out)' : ''}`).join(', ')}. Sizes haven’t been confirmed yet. ${contact}`;
     return {
       reply: `${named.name} — ${named.style}, ${fmt(named.price, cur)}.\nMaterial: ${named.material ?? 'not provided yet'}. Fit: ${named.fit ?? 'not provided yet'}.\n${stockText}${sampleNote}`,
       products: [publicProduct(named)],

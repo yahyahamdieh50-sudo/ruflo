@@ -97,7 +97,8 @@ const screens = {
     note: 'Social links must point to your profile pages (not the Facebook/Instagram home or settings pages). Leave blank until you have them — blank links are simply not shown.',
     html: `<section class="panel"><h2>Brand</h2>
         <div class="field-row"><div class="field"><label for="brand">Brand name</label><input id="brand" name="brand" type="text" maxlength="40" value="${esc(s.brand)}"></div>
-        <div class="field"><label for="logo">Logo URL <span class="hint">(/uploads/… or https://)</span></label><input id="logo" name="logo" type="text" value="${esc(s.logo ?? '')}"></div></div>
+        <div class="field"><label for="logo">Logo URL <span class="hint">(dark, for the header)</span></label><input id="logo" name="logo" type="text" value="${esc(s.logo ?? '')}"></div></div>
+        <div class="field"><label for="logoLight">Logo for dark backgrounds <span class="hint">(white, for the footer)</span></label><input id="logoLight" name="logoLight" type="text" value="${esc(s.logoLight ?? '')}"></div>
         <div class="field"><label for="ogImage">Social share image <span class="hint">1200×630 recommended</span></label><input id="ogImage" name="ogImage" type="text" value="${esc(s.ogImage ?? '')}"></div>
         <div class="field"><label for="eyebrow">Homepage eyebrow</label><input id="eyebrow" name="eyebrow" type="text" maxlength="60" value="${esc(s.hero.eyebrow ?? '')}"></div>
         <div class="field"><label for="headline">Homepage headline</label><input id="headline" name="headline" type="text" maxlength="80" value="${esc(s.hero.headline)}"></div>
@@ -118,7 +119,7 @@ const screens = {
         <div class="field"><label for="stt">TikTok profile URL</label><input id="stt" name="tiktok" type="url" placeholder="https://www.tiktok.com/@yourhandle" value="${esc(s.social.tiktok ?? '')}"></div>
       </section>`,
     read: (f) => ({
-      brand: v(f, 'brand'), logo: v(f, 'logo'), ogImage: v(f, 'ogImage'),
+      brand: v(f, 'brand'), logo: v(f, 'logo'), logoLight: v(f, 'logoLight'), ogImage: v(f, 'ogImage'),
       hero: { eyebrow: v(f, 'eyebrow'), headline: v(f, 'headline'), subhead: v(f, 'subhead') },
       contact: { email: v(f, 'email'), whatsapp: v(f, 'whatsapp'), phone: v(f, 'phone'), hours: v(f, 'hours'), address: v(f, 'address') },
       social: { facebook: v(f, 'facebook'), instagram: v(f, 'instagram'), tiktok: v(f, 'tiktok') },

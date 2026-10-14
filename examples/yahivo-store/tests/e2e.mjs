@@ -19,7 +19,7 @@ const PASSWORD = 'e2e-admin-password';
 const shots = process.env.SCREENSHOT_DIR;
 
 const server = spawn(process.execPath, ['--disable-warning=ExperimentalWarning', 'server.mjs'], {
-  cwd: root, env: { ...process.env, PORT: String(PORT), YAHIVO_DB: path.join(tmp, 'e2e.db'), ADMIN_PASSWORD: PASSWORD, ANTHROPIC_API_KEY: '', STRIPE_SECRET_KEY: '' }, stdio: ['ignore', 'pipe', 'inherit'],
+  cwd: root, env: { ...process.env, PORT: String(PORT), YAHIVO_DB: path.join(tmp, 'e2e.db'), YAHIVO_SEED: 'sample', ADMIN_PASSWORD: PASSWORD, ANTHROPIC_API_KEY: '', STRIPE_SECRET_KEY: '' }, stdio: ['ignore', 'pipe', 'inherit'],
 });
 await new Promise((resolve, reject) => {
   server.stdout.on('data', (d) => { if (String(d).includes('running at')) resolve(); });

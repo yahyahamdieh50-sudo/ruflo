@@ -26,6 +26,7 @@ const validators = {
     return {
       brand: ck.text('brand', v.brand, 'Brand name', { max: 40, required: true }),
       logo: ck.url('logo', v.logo, 'Logo', { allowRelative: true }),
+      logoLight: ck.url('logoLight', v.logoLight, 'Logo for dark backgrounds', { allowRelative: true }),
       ogImage: ck.url('ogImage', v.ogImage, 'Social share image', { allowRelative: true }),
       hero: {
         eyebrow: ck.text('hero.eyebrow', v.hero?.eyebrow, 'Eyebrow', { max: 60 }),
@@ -178,7 +179,7 @@ export function publicSettings(settings, { paymentMethods, aiMode, sampleData })
   const { tax } = settings;
   return {
     brand: settings.brand, currency: settings.currency, locale: settings.locale,
-    logo: settings.logo, hero: settings.hero, contact: settings.contact, social: settings.social,
+    logo: settings.logo, logoLight: settings.logoLight ?? null, hero: settings.hero, contact: settings.contact, social: settings.social,
     delivery: {
       regions: deliveryRegions(settings),
       zones: settings.delivery.zones.filter((z) => z.enabled)
@@ -202,6 +203,8 @@ export function launchChecklist(settings, products, { stripe, aiLive, adminPassw
   return [
     item(real.length && !products.some((p) => p.sample && p.published), 'Real products (sample catalog still published)', 'Admin → Products: add real hoodies, then unpublish or delete the SAMPLE items.'),
     item(real.length && real.every((p) => p.images.length), 'Product photos for every product', 'Admin → Products → Images (upload or paste URLs).'),
+    item(!real.some((p) => p.published && p.images.some((i) => i.src.startsWith('/img/products/'))), 'Original high-resolution photos (current ones are cropped from your screen recording)', 'Admin → Products → Photos: upload the original image files.', 'recommended'),
+    item(real.length && real.filter((p) => p.published).every((p) => p.sizes.length), 'Sizes for every published product (products without sizes can\u2019t be ordered)', 'Admin → Products → Sizes, then stock per size.'),
     item(real.length && real.every((p) => p.colors.every((c) => c.stock)), 'Stock quantities confirmed', 'Admin → Products → stock per colour/size.'),
     item(settings.logo, 'YAHIVO logo', 'Admin → Store info → Logo.'),
     item(settings.contact.email || settings.contact.phone || settings.contact.whatsapp, 'Customer contact channel', 'Admin → Store info → Contact.'),
@@ -213,7 +216,7 @@ export function launchChecklist(settings, products, { stripe, aiLive, adminPassw
     item(settings.delivery.couriers.length, 'Courier details (manual tracking workflow)', 'Admin → Delivery → Couriers.'),
     item(settings.packing.options.length, 'Packing options and fees', 'Admin → Packing.'),
     item(settings.tax.confirmed, 'Tax settings confirmed by you or your accountant', 'Admin → Tax: set name, rate, inclusive/exclusive, then tick "confirmed".'),
-    item(stripe, 'Payment provider (Network International or Stripe)', 'Set NGENIUS_API_KEY + NGENIUS_OUTLET_REF, or STRIPE_SECRET_KEY + STRIPE_WEBHOOK_SECRET (see README), then run a test payment.'),
+    item(stripe, 'Payment provider (Ziina, Network International or Stripe)', 'Set ZIINA_API_TOKEN (or NGENIUS_* / STRIPE_* — see README), then run a test payment.'),
     item(!settings.payments.manualOrderRequests || stripe, 'Pay-later order requests are a placeholder', 'Admin → Payments: turn off once a payment provider is live.', 'recommended'),
     item(settings.policies.shipping, 'Shipping policy text', 'Admin → Policies.'),
     item(settings.policies.returns, 'Returns / exchanges policy text', 'Admin → Policies.'),

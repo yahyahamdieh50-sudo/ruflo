@@ -59,7 +59,7 @@ async function detail(el, id) {
     <p><a href="#/orders">← All orders</a></p>
     <h1>${esc(o.number)} ${statusPill(o.status)}</h1>
     <p class="muted">Placed ${esc(new Date(o.createdAt).toLocaleString())} · Payment: ${esc(o.payment.label)} — <strong>${esc(PAYMENT[o.paymentStatus])}</strong></p>
-    <div class="actions"><button type="button" class="btn btn-ghost btn-small" id="print-slip">Print packing slip</button>${o.payment.method === 'ngenius' && o.paymentStatus === 'awaiting_payment' ? '<button type="button" class="btn btn-ghost btn-small" id="verify-pay">Check payment with Network International</button>' : ''}</div><br>
+    <div class="actions"><button type="button" class="btn btn-ghost btn-small" id="print-slip">Print packing slip</button>${['ngenius', 'ziina'].includes(o.payment.method) && o.paymentStatus === 'awaiting_payment' ? `<button type="button" class="btn btn-ghost btn-small" id="verify-pay">Check payment with ${o.payment.method === 'ziina' ? 'Ziina' : 'Network International'}</button>` : ''}</div><br>
     ${o.lines.some((l) => l.sample) ? '<div class="panel-note">This order contains SAMPLE products (test data).</div>' : ''}
     <div class="two-col">
       <div>

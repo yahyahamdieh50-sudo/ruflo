@@ -66,7 +66,8 @@ h3 { font-size: 1.1rem; line-height: 1.1; }
 .site-header { position: sticky; top: 0; z-index: 30; background: var(--paper); border-bottom: 2px solid var(--ink); }
 .header-row { display: flex; align-items: center; gap: .5rem; height: var(--header-h); }
 .logo { font-family: var(--display); font-stretch: 125%; font-weight: 900; font-size: 1.6rem; letter-spacing: .02em; text-decoration: none; margin-right: auto; }
-.logo img { height: 34px; width: auto; }
+.logo img { height: 22px; width: auto; display: block; }
+@media (min-width: 768px) { .logo img { height: 26px; } }
 .main-nav { display: none; gap: 1.6rem; margin-right: auto; }
 .main-nav a { font-weight: 800; text-transform: uppercase; font-size: .85rem; letter-spacing: .08em; text-decoration: none; padding: .5rem 0; border-bottom: 2px solid transparent; }
 .main-nav a:hover, .main-nav a[aria-current="page"] { border-color: var(--ink); }
@@ -117,6 +118,10 @@ main { min-height: 60vh; outline: none; }
 .hero-art .hoodie-svg { width: min(88%, 420px); filter: drop-shadow(0 30px 40px rgba(0,0,0,.5)); }
 .hero-art::before { content: "YAHIVO"; position: absolute; inset: auto 0 18% 0; text-align: center; font-family: var(--display); font-stretch: 125%; font-weight: 900; font-size: clamp(4rem, 22vw, 11rem); color: #1d1d1d; line-height: 1; letter-spacing: -.02em; }
 .hero-art .hoodie-svg { position: relative; }
+.hero-photo { position: relative; display: block; width: min(80%, 400px); aspect-ratio: 1; margin-bottom: 40px; border: 3px solid #fff; border-radius: var(--radius); overflow: hidden; box-shadow: 10px 10px 0 var(--accent); transform: rotate(-2deg); background: #fff; }
+.hero-photo img { width: 100%; height: 100%; object-fit: cover; }
+.hero-photo .hero-tag { position: absolute; left: 10px; bottom: 10px; background: var(--ink); color: #fff; font-size: .8rem; font-weight: 800; padding: 6px 10px; border-radius: 2px; }
+@media (min-width: 900px) { .hero-photo { margin-bottom: 56px; } }
 @media (min-width: 900px) {
   .hero-grid { grid-template-columns: 1.1fr 1fr; align-items: center; padding-top: 56px; }
   .hero-ctas { margin-bottom: 56px; }
@@ -305,6 +310,7 @@ th { background: var(--ink); color: #fff; font-weight: 800; text-transform: uppe
 .footer-grid { display: grid; gap: 28px; }
 @media (min-width: 768px) { .footer-grid { grid-template-columns: 2fr 1fr 1fr; } }
 .footer-logo { font-family: var(--display); font-stretch: 125%; font-weight: 900; font-size: 2.6rem; margin: 0 0 1rem; color: #fff; }
+.footer-logo img { width: 170px; height: auto; }
 .site-footer h2 { font-size: .8rem; letter-spacing: .14em; color: #fff; margin-bottom: .75rem; }
 .site-footer nav a { display: block; padding: 6px 0; text-decoration: none; color: #cfcac0; }
 .site-footer nav a:hover { color: #fff; }
@@ -347,3 +353,9 @@ body.has-sticky-atc .chat-launcher { bottom: calc(84px + env(safe-area-inset-bot
 .toast.err { box-shadow: 4px 4px 0 var(--err); }
 
 .hoodie-svg { display: block; height: auto; }
+
+/* Product photos: show the whole garment (studio shots are square, frames are 4:5). */
+.card-media img, .gallery-main img, .thumbs img, .line-media img, .msg-product .mp-media img { object-fit: contain; background: #fff; }
+.card-media:has(img), .gallery-main:has(img) { background: #fff; }
+.cat-card .cat-photo { position: absolute; right: 8px; top: 8px; width: 96px; height: 96px; object-fit: contain; background: #fff; border-radius: 2px; }
+@media (min-width: 768px) { .cat-card .cat-photo { width: 120px; height: 120px; } }

@@ -1,7 +1,7 @@
 // Static checks: syntax of every JS file, seed data validity, file size limit,
 // and a scan that no secret values leak into public/ files.
 import { execFileSync } from 'node:child_process';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validateProduct } from '../lib/validate.mjs';
@@ -35,10 +35,15 @@ for (const f of files.filter((x) => x.includes(`${path.sep}public${path.sep}`) &
   if (SECRET.test(readFileSync(f, 'utf8'))) fail(`possible secret in public file ${path.relative(root, f)}`);
 }
 
-try {
-  const { products } = JSON.parse(readFileSync(path.join(root, 'data/seed/products.sample.json'), 'utf8'));
-  products.forEach(validateProduct);
-} catch (e) { fail(`sample products invalid: ${JSON.stringify(e.fields ?? e.message)}`); }
+for (const file of ['products.yahivo.json', 'products.sample.json']) {
+  try {
+    const { products } = JSON.parse(readFileSync(path.join(root, 'data/seed', file), 'utf8'));
+    products.forEach(validateProduct);
+    for (const img of products.flatMap((p) => p.images ?? [])) {
+      if (img.src.startsWith('/') && !existsSync(path.join(root, 'public', img.src))) fail(`${file}: missing image ${img.src}`);
+    }
+  } catch (e) { fail(`${file} invalid: ${JSON.stringify(e.fields ?? e.message)}`); }
+}
 try {
   let s = JSON.parse(readFileSync(path.join(root, 'data/seed/settings.json'), 'utf8'));
   for (const sec of SECTIONS) s = applySection(s, sec, sec === 'store' ? s : s[sec]);

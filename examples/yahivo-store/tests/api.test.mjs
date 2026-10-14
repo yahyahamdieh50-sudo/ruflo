@@ -10,7 +10,7 @@ let base; let app; let cookie = '';
 const uploaded = [];
 
 before(async () => {
-  app = createApp({ store: new Store(':memory:'), env: { ADMIN_PASSWORD, SITE_URL: 'https://shop.example' } });
+  app = createApp({ store: new Store(':memory:', { seed: 'sample' }), env: { ADMIN_PASSWORD, SITE_URL: 'https://shop.example' } });
   await new Promise((r) => app.server.listen(0, '127.0.0.1', r));
   base = `http://127.0.0.1:${app.server.address().port}`;
 });

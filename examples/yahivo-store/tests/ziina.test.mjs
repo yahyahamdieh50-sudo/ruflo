@@ -134,6 +134,7 @@ test('real store settings: cash-on-delivery orders with Dubai AED 15 / rest of U
   assert.deepEqual([dubai.totals.items, dubai.totals.delivery, dubai.totals.tax, dubai.totals.total], [307.04, 15, 0, 322.04]);
   const sharjah = quote({ items, country: 'United Arab Emirates', region: 'Sharjah' }, ctx);
   assert.equal(sharjah.totals.delivery, 25);
+  assert.deepEqual(settings.delivery.couriers.map((c) => c.id), ['imile'], 'iMile is the cash-on-delivery courier');
   const placed = placeOrder({ items, paymentMethod: 'manual', expectedTotal: 322.04,
     customer: { name: 'Real Buyer', email: 'r@example.com', phone: '+971 50 111 0000', country: 'United Arab Emirates', region: 'Dubai', city: 'JBR', address1: 'Tower 1' } }, { store, settings, methods });
   const order = store.getOrder(placed.id);

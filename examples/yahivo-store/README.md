@@ -74,6 +74,8 @@ npm run test:e2e   # Playwright/Chromium: admin setup, desktop + mobile purchase
 
 ### Courier workflow (manual, no courier API connected)
 
+The store is set up with **iMile** as its cash-on-delivery courier. iMile collects the cash from the customer and pays it to you weekly. Mark the order **Paid** once the payout arrives.
+
 1. Admin → Delivery & couriers: add each courier you use. A tracking link such as `https://courier.example/track?n={tracking}` is optional.
 2. When packing an order, set the status to **Preparing**, then **Packed**, and record the packing notes.
 3. When the courier collects it, choose the courier, enter the tracking number and set **Handed to courier**. The app requires a courier before this status.
@@ -182,7 +184,8 @@ Admin → Dashboard shows this live. Today, everything below is still needed fro
 - [ ] **Original product photos** (current ones are low-resolution crops)
 - [ ] **Decide on the 9 hidden designs** (third-party brands/characters/portrait). Keep licences on file for the 3 you published
 - [ ] **Delivery estimates** you can promise (optional)
-- [ ] **Couriers** you use (for the manual tracking workflow)
+- [x] Courier: **iMile** for cash on delivery. The tracking link uses parcelsapp.com because iMile's own site has no public link format. Estimated cost is about AED 10 per parcel plus about 3% COD fee (minimum AED 2), paid out weekly, from third-party sources.
+- [ ] **Open the iMile account** and get the rate card and weekly cash payout terms in writing. Change the tracking link in Admin → Delivery if iMile gives you its own
 - [ ] **Packing options**, fees and materials
 - [ ] **Tax settings**, confirmed with your accountant. Nothing is assumed; tax is off.
 - [ ] **Ziina**: finish account verification, create an API key, set `ZIINA_API_TOKEN`, run a test payment, then set `ZIINA_LIVE=1`. Optional: cash on delivery works without it.

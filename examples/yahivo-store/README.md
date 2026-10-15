@@ -120,10 +120,14 @@ The store is set up with **iMile** as its cash-on-delivery courier. iMile collec
   4. Place a test order with Stripe's test cards and confirm it is marked *Paid* in the admin before going live.
 - The site never collects or stores card numbers. Other local providers (for example Network International, Telr, Tap or Checkout.com) can be added as an adapter like `lib/stripe.mjs`.
 
-## AI assistant
+## AI customer support
 
-- **Demo mode (current):** rule-based answers built only from your store data, labelled *"Demo mode"* in the chat. It recommends in-stock hoodies by style, colour, size and budget, and answers delivery, packing, tax, returns and sizing questions from your settings. Anything else gets *"I'm not confident…"* plus your contact channel. It cannot see orders and points customers to Track order.
-- **Live mode:** set `ANTHROPIC_API_KEY`, run `npm install` once in this folder (installs the optional `@anthropic-ai/sdk`), then restart. The model receives only the verified store data and is instructed not to invent details, stock, dates, tax treatment or order status. Product links are checked against your real catalog. If the API fails, the assistant falls back to demo answers.
+The chat ("Ask AI" button, bottom right) is the store's first line of customer support, 24/7. It is labelled as an AI assistant everywhere: chat header, Contact page, order page and FAQ.
+
+- **What it does:** recommends in-stock hoodies by style, colour, size and budget, and answers sizing, delivery, payment (cash on delivery), packing, tax and returns questions from your store data. It also **checks order status** once the customer gives their order number (YH-1001) **and** the email used at checkout. This is the same check as the Track order page and shares its rate limit (10 checks per 10 minutes per device). It shows status, items, total, payment and courier/tracking, never the address.
+- **What it hands to you:** changes, cancellations, refunds and exchanges. It cannot do those, so it gives the customer your WhatsApp/phone/email. It never invents stock, delivery dates or order status.
+- **Basic mode (current):** automatic rule-based answers built only from your store data, labelled *"Basic mode"*. It works with no API key.
+- **Full AI mode:** add `ANTHROPIC_API_KEY` to the Render environment (or `.env` locally) and redeploy; `npm install` already installs the AI library. Answers then come from Claude (`claude-opus-5-5` by default), still grounded only in your store data and the verified order lookup. Cost is roughly 1 US cent per answer (about $4 per million input tokens and $20 per million output tokens; the store data is cached between messages). To make it about 10 times cheaper, set `YAHIVO_AI_MODEL=claude-haiku-5-5`. If the AI service fails, the chat falls back to basic answers.
 
 ## Going live on Render at shop.yahivo.com (not done yet)
 

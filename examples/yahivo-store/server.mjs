@@ -145,7 +145,13 @@ export function createApp({ store = new Store(), env = process.env, fetchImpl = 
     if (p === '/api/assistant' && m === 'POST') {
       limit(req, 'assistant', 20, 60_000);
       const b = await readJson(req, 32 * 1024);
-      const out = await answer(b?.messages, ctx(), env);
+      // The assistant may look up an order only with a matching number + checkout email; shares the Track order rate limit.
+      const lookupOrder = (number, email) => {
+        if (!limiter.allow(`track:${clientIp(req)}`, 10, 10 * 60_000)) return { status: 'limited' };
+        const order = findForTracking(store, number, email);
+        return order ? { status: 'found', order: publicOrder(store, order) } : { status: 'not_found' };
+      };
+      const out = await answer(b?.messages, { ...ctx(), lookupOrder }, env);
       if (out.error) throw new HttpError(400, out.error);
       return sendJson(res, 200, out);
     }

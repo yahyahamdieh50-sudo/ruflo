@@ -268,7 +268,7 @@ try {
 
   // Assistant (demo mode)
   await desk.click('#chat-launcher');
-  await desk.getByText('Demo mode').waitFor();
+  await desk.getByText('Basic mode').waitFor();
   await desk.fill('#chat-input', 'Recommend a black hoodie in size M under 200');
   await desk.press('#chat-input', 'Enter');
   await desk.locator('.msg-product').first().waitFor();
@@ -278,10 +278,14 @@ try {
   await desk.fill('#chat-input', 'what is the capital of peru');
   await desk.press('#chat-input', 'Enter');
   await desk.locator('.msg-bot', { hasText: 'not confident' }).waitFor();
+  await desk.fill('#chat-input', 'where is my order YH-1001? email desk@example.com');
+  await desk.press('#chat-input', 'Enter');
+  // YH-1001's customer data was removed above, so the assistant must not find it any more.
+  await desk.locator('.msg-bot', { hasText: 'couldn’t find order YH-1001' }).waitFor();
   await shot(desk, 'desktop-chat');
   await desk.locator('.msg-product').first().click();
   await desk.waitForURL(/\/product\//);
-  step('assistant: recommendation links, grounded delivery answer, honest fallback');
+  step('assistant: recommendation links, grounded delivery answer, order status check, honest fallback');
 
   // ---------------- Customer on mobile
   // Own browser so the mobile page is the only (foreground) page: Chromium pauses

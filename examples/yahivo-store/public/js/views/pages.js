@@ -7,6 +7,7 @@ const missing = (what) => `<div class="notice notice-warn"><p>${what} hasn’t b
 
 function generatedFaqs(s) {
   const out = [];
+  out.push({ q: 'Who answers the chat?', a: `YAHIVO’s AI assistant answers instantly, any time. It uses the store’s own information and can check your order status with your order number and checkout email. It can’t change or cancel orders; the YAHIVO team handles those through the Contact page.`, link: ['/contact', 'Contact'] });
   out.push({ q: 'How do I choose my size?', a: s.sizeGuide.rows.length ? 'Use the size guide to compare the measurements with a hoodie you already own.' : 'Size measurements haven’t been published yet — please contact us for sizing help.', link: ['/size-guide', 'Size guide'] });
   const zones = s.delivery.zones;
   out.push({ q: 'Where do you deliver and how much does it cost?', a: zones.length ? zones.map((z) => `${z.name}: ${z.fee ? money(z.fee) : 'free'}${z.freeOver !== null ? ` (free over ${money(z.freeOver)})` : ''}${z.estimate ? ` — ${z.estimate}` : ''}`).join('\n') : 'Delivery areas and fees haven’t been published yet.', link: ['/shipping-returns', 'Shipping & returns'] });
@@ -22,7 +23,7 @@ const pages = {
   'size-guide': (s) => ['Size guide', `${sizeTable(s)}
     <h2>How to measure</h2><p>Lay a hoodie that fits you well flat and measure it: chest width from armpit to armpit, body length from the highest point of the shoulder to the hem, and sleeve length from the shoulder seam to the cuff. Compare with the table above.</p>`],
   faq: (s) => ['FAQs', `<div class="faq">${[...generatedFaqs(s), ...s.faqs].map((f) => `<details><summary>${esc(f.q)}</summary><div class="ans">${esc(f.a)}${f.link ? `\n<a href="${f.link[0]}" data-link>${esc(f.link[1])}</a>` : ''}</div></details>`).join('')}</div>
-    <p>Still stuck? Tap <strong>Ask</strong> or ${contactLink}.</p>`],
+    <p>Still stuck? <button type="button" class="link-btn" data-open-chat>Ask our AI assistant</button> or ${contactLink}.</p>`],
   'shipping-returns': (s) => ['Shipping & returns', `<h2>Delivery</h2>${deliveryTable(s)}
     ${s.policies.shipping ? `<h2>Shipping policy</h2><p class="pre">${esc(s.policies.shipping)}</p>` : missing('The shipping policy')}
     <h2>Returns &amp; exchanges</h2>${s.policies.returns ? `<p class="pre">${esc(s.policies.returns)}</p>` : missing('The returns policy')}`],
@@ -34,7 +35,8 @@ const pages = {
       c.phone && `<a class="contact-card" href="tel:${esc(c.phone.replace(/\s/g, ''))}"><strong>Phone</strong><span>${esc(c.phone)}</span></a>`,
       c.address && `<div class="contact-card"><strong>Address</strong><span class="pre">${esc(c.address)}</span></div>`,
     ].filter(Boolean);
-    return ['Contact', `${cards.length ? `<div class="contact-cards">${cards.join('')}</div>` : '<div class="notice notice-warn"><p>Contact details haven’t been added yet.</p></div>'}
+    return ['Contact', `<div class="notice"><h3>Fastest help: our AI assistant</h3><p>Get instant answers about sizes, delivery, payment and returns, any time. It can also check your order status: send your order number and the email you used at checkout. For changes, cancellations or anything it can’t solve, contact the team below.</p><button type="button" class="btn btn-accent" data-open-chat>Chat with the AI assistant</button></div>
+      ${cards.length ? `<div class="contact-cards">${cards.join('')}</div>` : '<div class="notice notice-warn"><p>Contact details haven’t been added yet.</p></div>'}
       ${c.hours ? `<p><strong>Hours:</strong> ${esc(c.hours)}</p>` : ''}
       <p>For order questions, include your order number. You can also <a href="/track" data-link>track your order</a>.</p>
       ${socialLinks(s.social) ? `<h2>Follow us</h2><div class="social">${socialLinks(s.social)}</div>` : ''}`];

@@ -24,6 +24,7 @@ import { routeMeta, robots, sitemap } from './lib/seo.mjs';
 import { clientIp, HttpError, readBody, readJson, securityHeaders, sendJson, serveStatic } from './lib/http.mjs';
 import { validateProduct, ValidationError } from './lib/validate.mjs';
 import { anonymiseOrder, ordersCsv } from './lib/fulfilment.mjs';
+import { applyAction, checkAction, dailySummary, liveCommand, parseCommand, summaryText } from './lib/admin-ai.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(here, 'public');
@@ -151,7 +152,14 @@ export function createApp({ store = new Store(), env = process.env, fetchImpl = 
         const order = findForTracking(store, number, email);
         return order ? { status: 'found', order: publicOrder(store, order) } : { status: 'not_found' };
       };
-      const out = await answer(b?.messages, { ...ctx(), lookupOrder }, env);
+      // Customer cancellation: re-verified here, only while "Received" and unpaid; stock is released by updateOrder.
+      const cancelOrder = (number, email) => {
+        const order = findForTracking(store, number, email);
+        if (!order || order.status !== 'received' || order.paymentStatus === 'paid') return false;
+        updateOrder(store, store.getSettings(), order.id, { status: 'cancelled', note: 'Cancelled by the customer through the AI assistant.' }, 'ai-assistant');
+        return true;
+      };
+      const out = await answer(b?.messages, { ...ctx(), lookupOrder, cancelOrder }, env);
       if (out.error) throw new HttpError(400, out.error);
       return sendJson(res, 200, out);
     }
@@ -202,9 +210,35 @@ export function createApp({ store = new Store(), env = process.env, fetchImpl = 
         integrations: {
           payments: [ziinaConfigured(env) && `Ziina configured (${ziinaLive(env) ? 'LIVE' : 'TEST mode'}) — run a test payment before launch`, ngeniusConfigured(env) && `Network International N-Genius configured (${env.NGENIUS_API_BASE ? 'custom API base' : 'SANDBOX'}) — run a test payment before launch`, stripe() && 'Stripe configured — run a test payment before launch'].filter(Boolean).join(' · ') || 'No payment provider configured',
           courier: 'Manual workflow — no courier API connected',
-          assistant: aiLive ? 'Live (Claude)' : 'Demo mode',
+          assistant: aiLive ? 'Full AI (Claude): customer chat + admin assistant' : 'Basic mode (add ANTHROPIC_API_KEY for full AI)',
         },
       });
+    }
+    // AI admin assistant: proposes actions; /apply runs only what the owner confirmed, re-validated.
+    if (p === '/api/admin/summary' && m === 'GET') {
+      const summary = dailySummary(store);
+      return sendJson(res, 200, { summary, text: summaryText(summary) });
+    }
+    if (p === '/api/admin/ai' && m === 'POST') {
+      limit(req, 'admin-ai', 30, 60_000);
+      const message = String((await readJson(req))?.message ?? '').slice(0, 1000);
+      const c = { store, settings: store.getSettings() };
+      const out = (await liveCommand(message, c, env)) ?? parseCommand(message, c);
+      const live = (await assistantMode(env)) === 'live';
+      return sendJson(res, 200, { mode: live ? 'live' : 'basic', reply: out.reply, actions: out.actions.map((a) => ({ action: a, ...checkAction(a, c) })) });
+    }
+    if (p === '/api/admin/ai/apply' && m === 'POST') {
+      const actions = (await readJson(req))?.actions;
+      if (!Array.isArray(actions) || !actions.length || actions.length > 20) throw new HttpError(400, 'Nothing to apply.');
+      const c = { store, settings: store.getSettings() };
+      const results = actions.map((a) => {
+        const chk = checkAction(a, c);
+        if (!chk.ok) return { description: chk.description, ok: false, error: chk.error };
+        try { applyAction(a, c); return { description: chk.description, ok: true }; } catch (e) {
+          return { description: chk.description, ok: false, error: e instanceof ValidationError ? Object.values(e.fields).join(' ') : 'Could not apply.' };
+        }
+      });
+      return sendJson(res, 200, { results });
     }
     if (p === '/api/admin/settings' && m === 'GET') return sendJson(res, 200, { settings: store.getSettings(), sections: SECTIONS });
     if ((match = p.match(/^\/api\/admin\/settings\/([a-zA-Z]+)$/)) && m === 'PUT') {

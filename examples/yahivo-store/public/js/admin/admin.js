@@ -10,6 +10,7 @@ const views = {
   '': dashboard,
   orders: (el, arg) => import('./orders.js').then((m) => m.default(el, arg)),
   products: (el, arg) => import('./products.js').then((m) => m.default(el, arg)),
+  ai: (el) => import('./ai.js').then((m) => m.default(el)),
 };
 const SETTINGS_VIEWS = ['delivery', 'packing', 'tax', 'payments', 'store', 'policies', 'sizeGuide', 'analytics'];
 
@@ -34,17 +35,18 @@ async function route() {
 }
 
 async function dashboard(el) {
-  const data = await adminApi('/api/admin/overview');
+  const [data, today] = await Promise.all([adminApi('/api/admin/overview'), adminApi('/api/admin/summary')]);
   const todo = data.checklist.filter((c) => !c.ok);
   const counts = data.orderCounts;
   el.innerHTML = `
     <h1>Dashboard</h1>
+    <section class="panel"><h2>Today</h2><p class="pre">${esc(today.text)}</p><a class="btn btn-small" href="#/ai">Ask the AI assistant</a></section>
     <div class="stats">${Object.entries(STATUS).map(([k, l]) => `<a class="stat" href="#/orders?status=${k}"><strong>${counts[k] ?? 0}</strong>${esc(l)}</a>`).join('')}</div>
     <section class="panel"><h2>Integrations</h2>
       <ul>
         <li><strong>Payments:</strong> ${esc(data.integrations.payments)}</li>
         <li><strong>Courier:</strong> ${esc(data.integrations.courier)}</li>
-        <li><strong>Shopping assistant:</strong> ${esc(data.integrations.assistant)}</li>
+        <li><strong>AI assistant:</strong> ${esc(data.integrations.assistant)}</li>
       </ul>
     </section>
     <section class="panel"><h2>Launch checklist — ${todo.length ? `${todo.length} item${todo.length === 1 ? '' : 's'} to do` : 'all done'}</h2>

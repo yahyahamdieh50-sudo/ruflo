@@ -110,9 +110,38 @@ function orderStatusReply(lookup, settings) {
     `Items: ${f.items.join('; ')}.`,
     `Total: ${f.total}. Payment: ${f.payment}.`,
     f.courier ? `Courier: ${f.courier}${f.trackingNumber ? `, tracking number ${f.trackingNumber}` : ''}.${f.trackingLink ? `\nTrack it here: ${f.trackingLink}` : ''}` : 'It hasn’t been handed to the courier yet.',
-    `To change or cancel this order, ${contact.charAt(0).toLowerCase()}${contact.slice(1)}`,
+    lookup.order.status === CANCELLABLE && lookup.order.paymentStatus !== 'paid'
+      ? `Want to cancel it? Reply exactly: CANCEL ${f.number}. For other changes, ${contact.charAt(0).toLowerCase()}${contact.slice(1)}`
+      : `For changes, ${contact.charAt(0).toLowerCase()}${contact.slice(1)}`,
   ];
   return { reply: lines.join('\n') };
+}
+
+// "CANCEL YH-1001" (optionally "yes, cancel order YH-1001") — the only message that actually cancels.
+const CANCEL_CONFIRM_RE = /^\s*(?:yes[,\s]+)?cancel\s+(?:order\s+)?YH[-\s]?(\d{4,7})\s*[.!]?\s*$/i;
+const CANCEL_INTENT_RE = /\bcancel/i;
+const CANCELLABLE = 'received';
+
+/**
+ * Customer self-service cancellation. Deterministic in both modes: the model never cancels anything.
+ * Returns a reply, or null when the message isn't about cancelling this verified order.
+ */
+export function cancellationReply(message, orderLookup, ctx) {
+  if (!orderLookup || orderLookup.status !== 'found' || !CANCEL_INTENT_RE.test(message)) return null;
+  const o = orderLookup.order;
+  const contact = contactLine(ctx.settings);
+  if (o.status === 'cancelled') return { reply: `Order ${o.number} is already cancelled.` };
+  if (o.status !== CANCELLABLE || o.paymentStatus === 'paid') {
+    return { reply: `Order ${o.number} is already ${o.statusLabel.toLowerCase()}, so I can’t cancel it automatically. ${contact}` };
+  }
+  const confirm = message.match(CANCEL_CONFIRM_RE);
+  if (confirm && `YH-${confirm[1]}` === o.number && ctx.cancelOrder) {
+    const done = ctx.cancelOrder();
+    return done
+      ? { reply: `Done. Order ${o.number} is cancelled and nothing will be charged. If you want different sizes or colours, you can place a new order any time.`, links: [{ href: '/shop', label: 'Shop hoodies' }] }
+      : { reply: `I couldn’t cancel order ${o.number} automatically. ${contact}` };
+  }
+  return { reply: `I can cancel order ${o.number} for you (${orderFacts(o).items.join('; ')}, ${orderFacts(o).total}). It hasn’t been prepared yet. To confirm, reply exactly:\nCANCEL ${o.number}` };
 }
 
 const has = (text, words) => words.some((w) => new RegExp(`\\b${w}`, 'i').test(text));
@@ -182,7 +211,7 @@ export function demoReply(message, { settings, products }, orderLookup = null) {
 }
 
 let sdkPromise;
-async function loadSdk() {
+export async function loadSdk() {
   sdkPromise ??= import('@anthropic-ai/sdk').then((m) => m.default).catch(() => null);
   return sdkPromise;
 }
@@ -196,7 +225,8 @@ Rules:
 - Use ONLY the JSON store data provided. Never invent product details, materials, prices, stock, delivery dates, tax treatment, policies, discounts or order status.
 - If a value is "not provided", "not published" or missing, say so and give the contact instructions from the data.
 - Orders: you can only see an order when an ORDER LOOKUP block is present, which means the customer gave a matching order number and checkout email. For order questions without it, ask for the order number (looks like YH-1001) and the email used at checkout. Never guess an order's status.
-- You cannot change, cancel, refund or exchange orders, or promise delivery dates. For those, give the contact instructions so the YAHIVO team can help.
+- Cancelling: the website handles it. If a customer wants to cancel, tell them to reply exactly "CANCEL <order number>" (only possible while the order is "Received"). Never say an order is cancelled yourself.
+- Changing size, colour or address: if the order is still "Received", suggest cancelling (as above) and placing a new order; otherwise give the contact instructions. You cannot refund, exchange or promise delivery dates; for those, give the contact instructions.
 - If the catalogue items have "sample": true, mention that the catalogue is sample data.
 - Recommend at most 3 hoodies that are in stock for the requested colour/size and within budget. Refer to a product by writing [[product:SLUG]] using its exact slug; the website turns that into a link.
 - Prices are in the store currency. Keep answers short and friendly. Plain text, no markdown headings.`;
@@ -245,6 +275,8 @@ export async function answer(messages, ctx, env = process.env) {
   // Order status only for a matching order number + checkout email (same check as the Track order page).
   const ref = orderRefFrom(history);
   const orderLookup = ref && ctx.lookupOrder ? { number: ref.number, ...ctx.lookupOrder(ref.number, ref.email) } : null;
+  const cancel = cancellationReply(last, orderLookup, { ...ctx, cancelOrder: ref && ctx.cancelOrder ? () => ctx.cancelOrder(ref.number, ref.email) : null });
+  if (cancel) return { mode: (await assistantMode(env)) === 'live' ? 'live' : 'demo', ...cancel };
   if ((await assistantMode(env)) === 'live') {
     try {
       return { mode: 'live', ...(await liveReply(history, ctx, env, orderLookup)) };

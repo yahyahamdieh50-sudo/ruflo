@@ -64,7 +64,8 @@ export default async function order(main, ctx) {
         ${summaryRows(o, { final: true })}
         <p class="sum-note">Payment: ${esc(o.payment.label)}</p>
         ${o.tax?.registrationNumber ? `<p class="sum-note">Tax registration no. ${esc(o.tax.registrationNumber)}</p>` : ''}
-        ${contactButtons(settings.contact) ? `<p class="sum-note">Questions about this order?</p><div class="social order-contact">${contactButtons(settings.contact, { message: `Hi YAHIVO, about my order ${o.number}` })}</div>` : '<a class="btn btn-ghost btn-block" href="/contact" data-link>Questions? Contact us</a>'}
+        <p class="sum-note">Questions about this order?</p><button type="button" class="btn btn-accent btn-block" data-open-chat>Ask our AI assistant</button>
+        ${contactButtons(settings.contact) ? `<div class="social order-contact">${contactButtons(settings.contact, { message: `Hi YAHIVO, about my order ${o.number}` })}</div>` : '<a class="btn btn-ghost btn-block" href="/contact" data-link>Questions? Contact us</a>'}
       </aside>
     </div>`;
   return undefined;

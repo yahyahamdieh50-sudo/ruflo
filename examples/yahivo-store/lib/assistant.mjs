@@ -65,16 +65,68 @@ export function recommend(products, prefs, limit = 3) {
   }).sort((a, b) => Number(b.featured) - Number(a.featured)).slice(0, limit);
 }
 
+const ORDER_RE = /\bYH[-\s]?(\d{4,7})\b/i;
+const EMAIL_IN_TEXT = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
+
+/** Order number + checkout email the customer typed in this chat (latest of each), or null. */
+export function orderRefFrom(history) {
+  let number = null;
+  let email = null;
+  for (const m of history) {
+    if (m.role !== 'user') continue;
+    const n = m.content.match(ORDER_RE);
+    if (n) number = `YH-${n[1]}`;
+    const e = m.content.match(EMAIL_IN_TEXT);
+    if (e) email = e[0];
+  }
+  return number && email ? { number, email } : null;
+}
+
+const PAYMENT_TEXT = { paid: 'paid', awaiting_payment: 'not paid yet', refunded: 'refunded', failed: 'payment failed', expired: 'payment expired' };
+
+/** What the assistant may tell a customer about their own (verified) order. No address or internal notes. */
+export function orderFacts(o) {
+  return {
+    number: o.number,
+    status: o.statusLabel,
+    placedOn: String(o.createdAt).slice(0, 10),
+    lastUpdate: String(o.history.at(-1)?.at ?? o.createdAt).slice(0, 10),
+    items: o.lines.map((l) => `${l.qty} × ${l.name} (${l.color}, size ${l.size})`),
+    total: fmt(o.totals.total, o.currency),
+    payment: `${o.payment.label} (${PAYMENT_TEXT[o.paymentStatus] ?? o.paymentStatus})`,
+    courier: o.fulfilment.courierName ?? null,
+    trackingNumber: o.fulfilment.trackingNumber ?? null,
+    trackingLink: o.fulfilment.trackingUrl ?? null,
+  };
+}
+
+function orderStatusReply(lookup, settings) {
+  const contact = contactLine(settings);
+  if (lookup.status === 'limited') return { reply: `Too many order checks from this device. Please wait 10 minutes, or use the Track order page. ${contact}`, links: [{ href: '/track', label: 'Track an order' }] };
+  if (lookup.status === 'not_found') return { reply: `I couldn’t find order ${lookup.number} with that email. Please check both match your order confirmation (the email must be the one used at checkout).`, links: [{ href: '/track', label: 'Track an order' }] };
+  const f = orderFacts(lookup.order);
+  const lines = [
+    `Order ${f.number}: ${f.status} (last update ${f.lastUpdate}).`,
+    `Items: ${f.items.join('; ')}.`,
+    `Total: ${f.total}. Payment: ${f.payment}.`,
+    f.courier ? `Courier: ${f.courier}${f.trackingNumber ? `, tracking number ${f.trackingNumber}` : ''}.${f.trackingLink ? `\nTrack it here: ${f.trackingLink}` : ''}` : 'It hasn’t been handed to the courier yet.',
+    `To change or cancel this order, ${contact.charAt(0).toLowerCase()}${contact.slice(1)}`,
+  ];
+  return { reply: lines.join('\n') };
+}
+
 const has = (text, words) => words.some((w) => new RegExp(`\\b${w}`, 'i').test(text));
 
 /** Deterministic, data-grounded replies (demo mode). */
-export function demoReply(message, { settings, products }) {
+export function demoReply(message, { settings, products }, orderLookup = null) {
   const cur = settings.currency;
   const contact = contactLine(settings);
   const sampleNote = products.some((p) => p.sample) ? ' (Note: the catalogue is currently sample data.)' : '';
 
-  if (has(message, ['order', 'track', 'tracking', 'where is my', 'status', 'parcel', 'cancel'])) {
-    return { reply: `I can’t see or change orders. To check an order, use the Track order page with your order number and email. For changes or problems, ${contact}`, links: [{ href: '/track', label: 'Track an order' }] };
+  const givesOrderDetails = ORDER_RE.test(message) || EMAIL_IN_TEXT.test(message);
+  if (has(message, ['order', 'track', 'tracking', 'where is my', 'status', 'parcel', 'cancel', 'deliver(ed|y) yet']) || givesOrderDetails) {
+    if (orderLookup) return orderStatusReply(orderLookup, settings);
+    return { reply: `I can check your order for you. Please send your order number (it looks like YH-1001) and the email you used at checkout. I can’t change or cancel orders myself; for that, ${contact.charAt(0).toLowerCase()}${contact.slice(1)}`, links: [{ href: '/track', label: 'Track an order' }] };
   }
   if (has(message, ['return', 'refund', 'exchange'])) {
     const p = settings.policies.returns;
@@ -139,17 +191,18 @@ export async function assistantMode(env = process.env) {
   return env.ANTHROPIC_API_KEY && (await loadSdk()) ? 'live' : 'demo';
 }
 
-const SYSTEM = `You are the shopping assistant for the YAHIVO hoodie store.
+const SYSTEM = `You are YAHIVO's AI assistant: the first point of customer support for the YAHIVO hoodie store (UAE). If asked, say clearly that you are an AI assistant.
 Rules:
 - Use ONLY the JSON store data provided. Never invent product details, materials, prices, stock, delivery dates, tax treatment, policies, discounts or order status.
 - If a value is "not provided", "not published" or missing, say so and give the contact instructions from the data.
-- You cannot see orders. For order questions, point to the Track order page (/track) and the contact instructions.
+- Orders: you can only see an order when an ORDER LOOKUP block is present, which means the customer gave a matching order number and checkout email. For order questions without it, ask for the order number (looks like YH-1001) and the email used at checkout. Never guess an order's status.
+- You cannot change, cancel, refund or exchange orders, or promise delivery dates. For those, give the contact instructions so the YAHIVO team can help.
 - If the catalogue items have "sample": true, mention that the catalogue is sample data.
 - Recommend at most 3 hoodies that are in stock for the requested colour/size and within budget. Refer to a product by writing [[product:SLUG]] using its exact slug; the website turns that into a link.
 - Prices are in the store currency. Keep answers short and friendly. Plain text, no markdown headings.`;
 
 /** Live reply via Claude. Falls back to demo mode on any error. */
-export async function liveReply(history, ctx, env = process.env) {
+export async function liveReply(history, ctx, env = process.env, orderLookup = null) {
   const Anthropic = await loadSdk();
   const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
   const response = await client.beta.messages.create({
@@ -158,7 +211,11 @@ export async function liveReply(history, ctx, env = process.env) {
     output_config: { effort: 'low' },
     betas: ['server-side-fallback-2026-07-01'],
     fallbacks: 'default',
-    system: [{ type: 'text', text: `${SYSTEM}\n\nSTORE DATA:\n${JSON.stringify(knowledge(ctx.settings, ctx.products))}`, cache_control: { type: 'ephemeral' } }],
+    system: [
+      { type: 'text', text: `${SYSTEM}\n\nSTORE DATA:\n${JSON.stringify(knowledge(ctx.settings, ctx.products))}`, cache_control: { type: 'ephemeral' } },
+      // After the cached block so the store-data prefix stays cacheable.
+      ...(orderLookup ? [{ type: 'text', text: `ORDER LOOKUP (${orderLookup.number}): ${orderLookup.status === 'found' ? JSON.stringify(orderFacts(orderLookup.order)) : orderLookup.status === 'limited' ? 'too many checks; ask the customer to wait 10 minutes or use /track' : 'no order matches that number and email'}` }] : []),
+    ],
     messages: history,
   });
   if (response.stop_reason === 'refusal') return { reply: `I can’t help with that. ${contactLine(ctx.settings)}` };
@@ -185,14 +242,17 @@ export async function answer(messages, ctx, env = process.env) {
   const history = validateHistory(messages);
   if (!history) return { error: 'Please type a question (max 1000 characters).' };
   const last = history[history.length - 1].content;
+  // Order status only for a matching order number + checkout email (same check as the Track order page).
+  const ref = orderRefFrom(history);
+  const orderLookup = ref && ctx.lookupOrder ? { number: ref.number, ...ctx.lookupOrder(ref.number, ref.email) } : null;
   if ((await assistantMode(env)) === 'live') {
     try {
-      return { mode: 'live', ...(await liveReply(history, ctx, env)) };
+      return { mode: 'live', ...(await liveReply(history, ctx, env, orderLookup)) };
     } catch (e) {
       console.error('[assistant] live request failed, using demo answer:', e?.status ?? '', e?.message);
-      return { mode: 'demo', notice: 'Live assistant unavailable — showing a basic answer.', ...demoReply(last, ctx) };
+      return { mode: 'demo', notice: 'Live assistant unavailable — showing a basic answer.', ...demoReply(last, ctx, orderLookup) };
     }
   }
-  return { mode: 'demo', ...demoReply(last, ctx) };
+  return { mode: 'demo', ...demoReply(last, ctx, orderLookup) };
 }
 

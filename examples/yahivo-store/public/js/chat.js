@@ -3,7 +3,7 @@ import { api } from './api.js';
 import { esc, money, productMedia } from './ui.js';
 
 const KEY = 'yh_chat_v1';
-const SUGGESTIONS = ['Recommend a black hoodie in M', 'How much is delivery?', 'What packing options are there?', 'How do I find my size?', 'Where is my order?'];
+const SUGGESTIONS = ['Where is my order?', 'Recommend a black hoodie in M', 'How much is delivery?', 'How do I find my size?', 'Can I pay cash on delivery?'];
 
 export function initChat(settings) {
   const launcher = document.getElementById('chat-launcher');
@@ -17,8 +17,8 @@ export function initChat(settings) {
   const save = () => { try { sessionStorage.setItem(KEY, JSON.stringify(history.slice(-20))); } catch { /* ignore */ } };
 
   document.getElementById('chat-mode').innerHTML = settings.aiMode === 'live'
-    ? 'AI answers from YAHIVO store info. It can’t see your orders.'
-    : '<strong>Demo mode</strong> — rule-based answers from store info (no AI connected).';
+    ? 'AI customer support, 24/7. Answers from YAHIVO store info and checks orders with your order number + email.'
+    : '<strong>Basic mode</strong> — automatic answers from store info (full AI not connected yet). Checks orders with your order number + email.';
 
   function bubble(m) {
     const el = document.createElement('div');
@@ -45,7 +45,7 @@ export function initChat(settings) {
 
   function renderAll() {
     log.innerHTML = '';
-    bubble({ role: 'assistant', content: `Hi! I can help you pick a hoodie by style, colour, size and budget, and answer questions about sizing, delivery, packing, tax and returns using ${settings.brand}’s store info.` });
+    bubble({ role: 'assistant', content: `Hi! I’m ${settings.brand}’s AI assistant. I can help you choose a hoodie, answer questions about sizing, delivery, payment and returns, and check your order status — just send your order number and the email you used at checkout.` });
     history.forEach(bubble);
     suggest.innerHTML = history.length ? '' : SUGGESTIONS.map((s) => `<button type="button">${esc(s)}</button>`).join('');
   }
@@ -57,6 +57,8 @@ export function initChat(settings) {
     if (state) { renderAll(); input.focus(); } else launcher.focus();
   };
   launcher.addEventListener('click', () => open(true));
+  // Any page can open the assistant with a [data-open-chat] button.
+  document.addEventListener('click', (e) => { if (e.target.closest('[data-open-chat]')) { e.preventDefault(); open(true); } });
   document.getElementById('chat-close').addEventListener('click', () => open(false));
   panel.addEventListener('keydown', (e) => { if (e.key === 'Escape') open(false); });
   panel.addEventListener('click', (e) => { if (e.target.closest('a[data-link]') && window.matchMedia('(max-width: 599px)').matches) open(false); });

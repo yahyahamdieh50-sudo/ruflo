@@ -125,6 +125,19 @@ test('order tracking requires matching number + email', async () => {
   assert.equal(ok.json.token, order.token);
 });
 
+test('AI assistant checks order status only with matching number + checkout email', async () => {
+  const ask = async (...contents) => (await call('/api/assistant', { method: 'POST', body: { messages: contents.flatMap((c, i) => (i ? [{ role: 'assistant', content: 'ok' }, { role: 'user', content: c }] : [{ role: 'user', content: c }])) } })).json;
+  const askOnly = await ask('Where is my order?');
+  assert.match(askOnly.reply, /order number/);
+  const wrong = await ask('Where is my order YH-1001?', 'my email is other@example.com');
+  assert.match(wrong.reply, /couldn’t find order YH-1001/);
+  assert.equal(/Received|Total/.test(wrong.reply), false, 'nothing leaked for a wrong email');
+  const ok = await ask('Where is my order YH-1001?', 'BUYER@example.com');
+  assert.match(ok.reply, /Order YH-1001: Received/);
+  assert.match(ok.reply, /Total: AED/);
+  assert.equal(/Tower|address/i.test(ok.reply), false, 'no address in chat');
+});
+
 test('admin fulfilment workflow: courier + tracking, packing notes, statuses, payment', async () => {
   const list = (await call('/api/admin/orders?status=received', { admin: true })).json;
   const id = list.orders[0].id;

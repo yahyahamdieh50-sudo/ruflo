@@ -5,7 +5,7 @@ import { computeTotals } from '../lib/money.mjs';
 import { applySection, deliveryRegions, launchChecklist, zoneFor } from '../lib/settings.mjs';
 import { validateCustomer, validateProduct, ValidationError } from '../lib/validate.mjs';
 import { sessionParams, verifyWebhook } from '../lib/stripe.mjs';
-import { demoReply, parsePrefs, validateHistory } from '../lib/assistant.mjs';
+import { demoReply, orderRefFrom, parsePrefs, validateHistory } from '../lib/assistant.mjs';
 import { filterProducts, parseQuery } from '../lib/catalog.mjs';
 import { nextStatuses } from '../lib/orders.mjs';
 import { readFileSync } from 'node:fs';
@@ -121,7 +121,9 @@ test('stripe session line items mirror the order total (exclusive tax)', () => {
 test('assistant demo: grounded answers, no invented info, contact fallback', () => {
   const ctx = { settings: seedSettings, products: sampleProducts };
   assert.match(demoReply('how much is delivery?', ctx).reply, /haven’t been published/);
-  assert.match(demoReply('where is my order?', ctx).reply, /can’t see/);
+  assert.match(demoReply('where is my order?', ctx).reply, /order number .*email you used at checkout/);
+  assert.match(demoReply('where is my order?', ctx, { status: 'not_found', number: 'YH-1001' }).reply, /couldn’t find order YH-1001/);
+  assert.match(demoReply('where is my order?', ctx, { status: 'limited', number: 'YH-1001' }).reply, /Too many order checks/);
   assert.match(demoReply('what is your return policy', ctx).reply, /hasn’t been published/);
   assert.match(demoReply('what is the meaning of life', ctx).reply, /not confident/);
   const rec = demoReply('black hoodie size M under 220 aed', ctx);
@@ -157,4 +159,12 @@ test('CSV export neutralises spreadsheet formulas and quotes cells', async () =>
   assert.match(row, /"'=HYPERLINK\(""http:\/\/x""\)"/);
   assert.match(row, /"'\+971 50"/);
   assert.match(row, /"Line ""1"""/);
+});
+
+test('assistant reads order number + checkout email from the chat (latest of each)', () => {
+  const u = (content) => ({ role: 'user', content });
+  assert.equal(orderRefFrom([u('where is my order?')]), null);
+  assert.equal(orderRefFrom([u('order yh 1002')]), null, 'number alone is not enough');
+  assert.deepEqual(orderRefFrom([u('order YH-1002'), { role: 'assistant', content: 'email?' }, u('it is Me@Example.com')]), { number: 'YH-1002', email: 'Me@Example.com' });
+  assert.deepEqual(orderRefFrom([u('yh1001 a@b.co'), u('sorry, YH-1003')]), { number: 'YH-1003', email: 'a@b.co' });
 });

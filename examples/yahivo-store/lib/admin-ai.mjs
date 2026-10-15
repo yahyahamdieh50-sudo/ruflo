@@ -4,7 +4,8 @@
 // through the same functions the admin pages use.
 import { STATUS_LABELS, updateOrder } from './orders.mjs';
 import { validateProduct } from './validate.mjs';
-import { DEFAULT_MODEL, loadSdk } from './assistant.mjs';
+import { DEFAULT_MODEL, liveProviders, loadSdk } from './assistant.mjs';
+import { providerChat } from './ai-providers.mjs';
 
 const fmtMoney = (n, cur) => `${cur} ${Number(n).toFixed(2)}`;
 // Store days follow UAE time (UTC+4, no daylight saving).
@@ -35,6 +36,7 @@ export function dailySummary(store, now = new Date()) {
     readyForCourier: orders.filter((o) => o.status === 'packed').map(brief),
     withCourier: orders.filter((o) => o.status === 'handed_to_courier').map(brief),
     cashToCollect: orders.filter((o) => o.status === 'delivered' && o.paymentStatus === 'awaiting_payment').map(brief),
+    returnRequests: orders.filter((o) => o.returnRequest?.status === 'requested').map((o) => ({ ...brief(o), items: `${brief(o).items} — reason: ${o.returnRequest.reason}` })),
     lowStock,
     soldOut,
   };
@@ -48,9 +50,10 @@ export function summaryText(s) {
   if (s.readyForCourier.length) out.push(`Packed, waiting for iMile pickup (${s.readyForCourier.length}):\n${list(s.readyForCourier)}`);
   if (s.withCourier.length) out.push(`With the courier (${s.withCourier.length}):\n${list(s.withCourier)}`);
   if (s.cashToCollect.length) out.push(`Delivered but cash not marked paid (${s.cashToCollect.length}) — mark paid when iMile pays you:\n${list(s.cashToCollect)}`);
+  if (s.returnRequests.length) out.push(`Return requests to arrange (${s.returnRequests.length}):\n${list(s.returnRequests)}`);
   if (s.lowStock.length) out.push(`Low stock:\n${s.lowStock.map((x) => `  • ${x}`).join('\n')}`);
   if (s.soldOut.length) out.push(`Sold out: ${s.soldOut.length} size${s.soldOut.length === 1 ? '' : 's'} (${s.soldOut.slice(0, 6).join(', ')}${s.soldOut.length > 6 ? ', …' : ''}).`);
-  if (!s.toPrepare.length && !s.readyForCourier.length && !s.cashToCollect.length) out.push('Nothing waiting on you right now.');
+  if (!s.toPrepare.length && !s.readyForCourier.length && !s.cashToCollect.length && !s.returnRequests.length) out.push('Nothing waiting on you right now.');
   return out.join('\n\n');
 }
 
@@ -164,7 +167,7 @@ export function applyAction(a, { store, settings }) {
   else if (a.type === 'ship') updateOrder(store, settings, o.id, { courierId: a.courierId, trackingNumber: a.trackingNumber, status: 'handed_to_courier' }, actor);
 }
 
-// ---------- full AI mode (ANTHROPIC_API_KEY): Claude maps the request to the same proposed actions
+// ---------- full AI mode (Claude, ChatGPT or Gemini): the model maps the request to the same proposed actions
 
 const NULLABLE = (type) => ({ type: [type, 'null'] });
 const ACTIONS_SCHEMA = {
@@ -208,27 +211,38 @@ function adminKnowledge(store, settings) {
   };
 }
 
-/** Live mode. Returns null on any failure so the caller can fall back to parseCommand. */
-export async function liveCommand(text, { store, settings }, env) {
+async function claudeCommand(system, text, env) {
   const Anthropic = await loadSdk();
-  if (!env.ANTHROPIC_API_KEY || !Anthropic) return null;
-  try {
-    const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
-    const response = await client.beta.messages.create({
-      model: env.YAHIVO_AI_MODEL || DEFAULT_MODEL,
-      max_tokens: 4000,
-      output_config: { effort: 'low', format: { type: 'json_schema', schema: ACTIONS_SCHEMA } },
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
-      system: `${ADMIN_SYSTEM}\n\nSTORE DATA:\n${JSON.stringify(adminKnowledge(store, settings))}`,
-      messages: [{ role: 'user', content: String(text).slice(0, 1000) }],
-    });
-    if (response.stop_reason !== 'end_turn') return null;
-    const out = JSON.parse(response.content.filter((b) => b.type === 'text').map((b) => b.text).join(''));
-    const actions = (out.actions ?? []).slice(0, 20).map((a) => Object.fromEntries(Object.entries(a).filter(([, v]) => v !== null)));
-    return { reply: String(out.reply ?? ''), actions };
-  } catch (e) {
-    console.error('[admin-ai] live request failed, using basic parser:', e?.status ?? '', e?.message);
-    return null;
+  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+  const response = await client.beta.messages.create({
+    model: env.YAHIVO_AI_MODEL || DEFAULT_MODEL,
+    max_tokens: 4000,
+    output_config: { effort: 'low', format: { type: 'json_schema', schema: ACTIONS_SCHEMA } },
+    betas: ['server-side-fallback-2026-07-01'],
+    fallbacks: 'default',
+    system,
+    messages: [{ role: 'user', content: text }],
+  });
+  if (response.stop_reason !== 'end_turn') throw new Error(`stop_reason ${response.stop_reason}`);
+  return response.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
+}
+
+/** Live mode: tries each configured provider in order. Returns null if none works, so the caller falls back to parseCommand. */
+export async function liveCommand(text, { store, settings, fetchImpl = fetch }, env) {
+  const system = `${ADMIN_SYSTEM}\n\nSTORE DATA:\n${JSON.stringify(adminKnowledge(store, settings))}`;
+  const message = String(text).slice(0, 1000);
+  for (const provider of await liveProviders(env)) {
+    try {
+      const raw = provider === 'anthropic'
+        ? await claudeCommand(system, message, env)
+        : await providerChat(provider, { system, history: [{ role: 'user', content: message }], env, schema: ACTIONS_SCHEMA, fetchImpl });
+      const out = JSON.parse(raw.replace(/^```(?:json)?\s*|\s*```$/g, ''));
+      if (!out || typeof out !== 'object' || !Array.isArray(out.actions ?? [])) throw new Error('Unexpected JSON shape');
+      const actions = (out.actions ?? []).slice(0, 20).filter((a) => a && typeof a === 'object').map((a) => Object.fromEntries(Object.entries(a).filter(([, v]) => v !== null)));
+      return { provider, reply: String(out.reply ?? ''), actions };
+    } catch (e) {
+      console.error(`[admin-ai] ${provider} failed:`, e?.status ?? '', e?.message);
+    }
   }
+  return null;
 }

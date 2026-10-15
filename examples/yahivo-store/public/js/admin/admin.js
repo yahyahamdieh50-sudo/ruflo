@@ -47,6 +47,7 @@ async function dashboard(el) {
         <li><strong>Payments:</strong> ${esc(data.integrations.payments)}</li>
         <li><strong>Courier:</strong> ${esc(data.integrations.courier)}</li>
         <li><strong>AI assistant:</strong> ${esc(data.integrations.assistant)}</li>
+        <li><strong>n8n (WhatsApp, Messenger, Instagram):</strong> ${esc(data.integrations.n8n)}</li>
       </ul>
     </section>
     <section class="panel"><h2>Launch checklist — ${todo.length ? `${todo.length} item${todo.length === 1 ? '' : 's'} to do` : 'all done'}</h2>

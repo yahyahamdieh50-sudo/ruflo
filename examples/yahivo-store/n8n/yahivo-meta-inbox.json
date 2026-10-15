@@ -1,0 +1,240 @@
+{
+  "name": "YAHIVO – AI replies on WhatsApp, Messenger and Instagram",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "yahivo-meta",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "e08c1d3a-fc12-5f43-8676-77b84fe90071",
+      "name": "Meta verification (GET)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "24a42678-7e9e-5313-b65f-c740a3be91f2"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.query['hub.verify_token'] === 'REPLACE_WITH_YOUR_VERIFY_TOKEN' ? $json.query['hub.challenge'] : 'forbidden' }}",
+        "options": {}
+      },
+      "id": "6e5958c5-2db8-5338-a639-6085a67b01da",
+      "name": "Answer verification",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        0
+      ],
+      "notes": "Replace REPLACE_WITH_YOUR_VERIFY_TOKEN with the same Verify token you type in the Meta app webhook settings.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "yahivo-meta",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "7ef4b5cc-1d37-505c-9be6-a46358226ad0",
+      "name": "Meta messages (POST)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        240
+      ],
+      "webhookId": "bd01d297-9ece-5f52-96f4-e081b6f5aa69"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Turns Meta webhook events (WhatsApp, Messenger, Instagram) into { channel, userId, text }.\n// Only text messages from customers; echoes of our own replies are skipped.\nconst out = [];\nfor (const item of $input.all()) {\n  const body = item.json.body ?? {};\n  for (const entry of body.entry ?? []) {\n    if (body.object === 'whatsapp_business_account') {\n      for (const change of entry.changes ?? []) {\n        const v = change.value ?? {};\n        for (const m of v.messages ?? []) {\n          if (m.type !== 'text' || !m.text?.body) continue;\n          out.push({ json: { channel: 'whatsapp', userId: m.from, text: m.text.body, phoneNumberId: v.metadata?.phone_number_id } });\n        }\n      }\n    } else if (body.object === 'page' || body.object === 'instagram') {\n      for (const ev of entry.messaging ?? []) {\n        if (!ev.message?.text || ev.message.is_echo) continue;\n        out.push({ json: { channel: body.object === 'page' ? 'messenger' : 'instagram', userId: ev.sender.id, text: ev.message.text } });\n      }\n    }\n  }\n}\nreturn out;"
+      },
+      "id": "8a63d0a1-6631-5883-8017-736188f33020",
+      "name": "Normalize messages",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://shop.yahivo.com/api/integrations/chat",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ channel: $json.channel, userId: $json.userId, text: $json.text }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "f3124076-d4bd-50e7-aac1-c09368322130",
+      "name": "Ask YAHIVO AI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        240
+      ],
+      "notes": "Credential: Header Auth — Name: Authorization, Value: Bearer <your N8N_API_TOKEN>. Change the URL if your store address is different.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "3bc73f7b-6a23-5603-b34c-912f1c44abb5",
+              "leftValue": "={{ $('Normalize messages').item.json.channel }}",
+              "rightValue": "whatsapp",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "eee31c45-00f1-5406-adee-fa7b0b841765",
+      "name": "WhatsApp?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        720,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v23.0/{{ $('Normalize messages').item.json.phoneNumberId }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $('Normalize messages').item.json.userId, type: 'text', text: { body: $json.reply.slice(0, 4000) } }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "be296ddf-242a-507b-adac-9182abbb6567",
+      "name": "Reply on WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        140
+      ],
+      "notes": "Credential: Header Auth — Name: Authorization, Value: Bearer <WhatsApp Cloud API access token>.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v23.0/me/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ recipient: { id: $('Normalize messages').item.json.userId }, messaging_type: 'RESPONSE', message: { text: $json.reply.slice(0, 1000) } }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "af695f00-e8e6-5ee0-8d9e-d7e6d2a096e9",
+      "name": "Reply on Messenger / Instagram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        340
+      ],
+      "notes": "Credential: Header Auth — Name: Authorization, Value: Bearer <Facebook Page access token> (the Page linked to your Instagram account).",
+      "notesInFlow": true
+    }
+  ],
+  "connections": {
+    "Meta verification (GET)": {
+      "main": [
+        [
+          {
+            "node": "Answer verification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta messages (POST)": {
+      "main": [
+        [
+          {
+            "node": "Normalize messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize messages": {
+      "main": [
+        [
+          {
+            "node": "Ask YAHIVO AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask YAHIVO AI": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp?": {
+      "main": [
+        [
+          {
+            "node": "Reply on WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reply on Messenger / Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

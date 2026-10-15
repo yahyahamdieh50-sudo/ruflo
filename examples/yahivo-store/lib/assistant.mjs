@@ -3,6 +3,7 @@
 // labelled demo mode answers with deterministic rules over the same data.
 import { publicProduct, stockOf } from './catalog.mjs';
 import { cleanText } from './validate.mjs';
+import { configuredProviders, providerChat } from './ai-providers.mjs';
 
 export const DEFAULT_MODEL = 'claude-opus-5-5';
 const fmt = (n, cur) => (n === null || n === undefined ? 'not set' : `${cur} ${Number(n).toFixed(2)}`);
@@ -97,6 +98,7 @@ export function orderFacts(o) {
     courier: o.fulfilment.courierName ?? null,
     trackingNumber: o.fulfilment.trackingNumber ?? null,
     trackingLink: o.fulfilment.trackingUrl ?? null,
+    returnRequest: o.returnRequest ? `${o.returnRequest.status} on ${String(o.returnRequest.at).slice(0, 10)}` : null,
   };
 }
 
@@ -110,9 +112,63 @@ function orderStatusReply(lookup, settings) {
     `Items: ${f.items.join('; ')}.`,
     `Total: ${f.total}. Payment: ${f.payment}.`,
     f.courier ? `Courier: ${f.courier}${f.trackingNumber ? `, tracking number ${f.trackingNumber}` : ''}.${f.trackingLink ? `\nTrack it here: ${f.trackingLink}` : ''}` : 'It hasn’t been handed to the courier yet.',
-    `To change or cancel this order, ${contact.charAt(0).toLowerCase()}${contact.slice(1)}`,
+    lookup.order.status === CANCELLABLE && lookup.order.paymentStatus !== 'paid'
+      ? `Want to cancel it? Reply exactly: CANCEL ${f.number}. For other changes, ${contact.charAt(0).toLowerCase()}${contact.slice(1)}`
+      : lookup.order.status === 'delivered' && !lookup.order.returnRequest
+        ? `Need to return something? Reply: RETURN ${f.number} followed by the reason.`
+        : f.returnRequest ? `Return request: ${f.returnRequest}. The team will contact you.` : `For changes, ${contact.charAt(0).toLowerCase()}${contact.slice(1)}`,
   ];
   return { reply: lines.join('\n') };
+}
+
+// "CANCEL YH-1001" (optionally "yes, cancel order YH-1001") — the only message that actually cancels.
+const CANCEL_CONFIRM_RE = /^\s*(?:yes[,\s]+)?cancel\s+(?:order\s+)?YH[-\s]?(\d{4,7})\s*[.!]?\s*$/i;
+const CANCEL_INTENT_RE = /\bcancel/i;
+const CANCELLABLE = 'received';
+
+/**
+ * Customer self-service cancellation. Deterministic in both modes: the model never cancels anything.
+ * Returns a reply, or null when the message isn't about cancelling this verified order.
+ */
+export function cancellationReply(message, orderLookup, ctx) {
+  if (!orderLookup || orderLookup.status !== 'found' || !CANCEL_INTENT_RE.test(message)) return null;
+  const o = orderLookup.order;
+  const contact = contactLine(ctx.settings);
+  if (o.status === 'cancelled') return { reply: `Order ${o.number} is already cancelled.` };
+  if (o.status !== CANCELLABLE || o.paymentStatus === 'paid') {
+    return { reply: `Order ${o.number} is already ${o.statusLabel.toLowerCase()}, so I can’t cancel it automatically. ${contact}` };
+  }
+  const confirm = message.match(CANCEL_CONFIRM_RE);
+  if (confirm && `YH-${confirm[1]}` === o.number && ctx.cancelOrder) {
+    const done = ctx.cancelOrder();
+    return done
+      ? { reply: `Done. Order ${o.number} is cancelled and nothing will be charged. If you want different sizes or colours, you can place a new order any time.`, links: [{ href: '/shop', label: 'Shop hoodies' }] }
+      : { reply: `I couldn’t cancel order ${o.number} automatically. ${contact}` };
+  }
+  return { reply: `I can cancel order ${o.number} for you (${orderFacts(o).items.join('; ')}, ${orderFacts(o).total}). It hasn’t been prepared yet. To confirm, reply exactly:\nCANCEL ${o.number}` };
+}
+
+// "RETURN YH-1001 too small" — records a return request (the team arranges the return).
+const RETURN_CONFIRM_RE = /^\s*return\s+(?:order\s+)?YH[-\s]?(\d{4,7})\s*[:,\-–]?\s*(.{3,300})$/is;
+const RETURN_INTENT_RE = /\b(return|refund|exchange)\b/i;
+
+/** Customer return requests. Deterministic: records the request; never approves refunds. */
+export function returnReply(message, orderLookup, ctx) {
+  if (!orderLookup || orderLookup.status !== 'found' || !RETURN_INTENT_RE.test(message)) return null;
+  const o = orderLookup.order;
+  const policy = [{ href: '/shipping-returns', label: 'Returns policy' }];
+  if (o.returnRequest) return { reply: `A return request for ${o.number} was already recorded on ${String(o.returnRequest.at).slice(0, 10)} (${o.returnRequest.status}). The YAHIVO team will contact you to arrange it.`, links: policy };
+  if (o.status !== 'delivered') {
+    return { reply: `Returns can be requested once an order is delivered. Order ${o.number} is ${o.statusLabel.toLowerCase()}.${o.status === CANCELLABLE ? ` If you no longer want it, you can cancel it: reply exactly CANCEL ${o.number}.` : ''}`, links: policy };
+  }
+  const confirm = message.match(RETURN_CONFIRM_RE);
+  if (confirm && `YH-${confirm[1]}` === o.number && ctx.requestReturn) {
+    const reason = cleanText(confirm[2], { max: 300 });
+    return ctx.requestReturn(reason)
+      ? { reply: `Your return request for ${o.number} is recorded (reason: ${reason}). The YAHIVO team will contact you to arrange it. Please don’t send anything back before they contact you, and check the returns policy for the conditions.`, links: policy }
+      : { reply: `I couldn’t record the return request. ${contactLine(ctx.settings)}`, links: policy };
+  }
+  return { reply: `I can record a return request for ${o.number}. Please check the returns policy first, then reply: RETURN ${o.number} followed by the reason (for example: RETURN ${o.number} too small).`, links: policy };
 }
 
 const has = (text, words) => words.some((w) => new RegExp(`\\b${w}`, 'i').test(text));
@@ -182,13 +238,20 @@ export function demoReply(message, { settings, products }, orderLookup = null) {
 }
 
 let sdkPromise;
-async function loadSdk() {
+export async function loadSdk() {
   sdkPromise ??= import('@anthropic-ai/sdk').then((m) => m.default).catch(() => null);
   return sdkPromise;
 }
 
+/** Providers that can actually answer right now (Claude also needs the SDK installed). */
+export async function liveProviders(env = process.env) {
+  const out = [];
+  for (const p of configuredProviders(env)) if (p !== 'anthropic' || (await loadSdk())) out.push(p);
+  return out;
+}
+
 export async function assistantMode(env = process.env) {
-  return env.ANTHROPIC_API_KEY && (await loadSdk()) ? 'live' : 'demo';
+  return (await liveProviders(env)).length ? 'live' : 'demo';
 }
 
 const SYSTEM = `You are YAHIVO's AI assistant: the first point of customer support for the YAHIVO hoodie store (UAE). If asked, say clearly that you are an AI assistant.
@@ -196,13 +259,41 @@ Rules:
 - Use ONLY the JSON store data provided. Never invent product details, materials, prices, stock, delivery dates, tax treatment, policies, discounts or order status.
 - If a value is "not provided", "not published" or missing, say so and give the contact instructions from the data.
 - Orders: you can only see an order when an ORDER LOOKUP block is present, which means the customer gave a matching order number and checkout email. For order questions without it, ask for the order number (looks like YH-1001) and the email used at checkout. Never guess an order's status.
-- You cannot change, cancel, refund or exchange orders, or promise delivery dates. For those, give the contact instructions so the YAHIVO team can help.
+- Cancelling: the website handles it. If a customer wants to cancel, tell them to reply exactly "CANCEL <order number>" (only possible while the order is "Received"). Never say an order is cancelled yourself.
+- Returns: the website records return requests for delivered orders. Tell the customer to reply exactly "RETURN <order number> <reason>". Never approve a refund or return yourself.
+- Changing size, colour or address: if the order is still "Received", suggest cancelling (as above) and placing a new order; otherwise give the contact instructions. You cannot refund, exchange or promise delivery dates; for those, give the contact instructions.
 - If the catalogue items have "sample": true, mention that the catalogue is sample data.
 - Recommend at most 3 hoodies that are in stock for the requested colour/size and within budget. Refer to a product by writing [[product:SLUG]] using its exact slug; the website turns that into a link.
 - Prices are in the store currency. Keep answers short and friendly. Plain text, no markdown headings.`;
 
 /** Live reply via Claude. Falls back to demo mode on any error. */
+const orderBlock = (orderLookup) => (orderLookup ? `ORDER LOOKUP (${orderLookup.number}): ${orderLookup.status === 'found' ? JSON.stringify(orderFacts(orderLookup.order)) : orderLookup.status === 'limited' ? 'too many checks; ask the customer to wait 10 minutes or use /track' : 'no order matches that number and email'}` : '');
+
+/** Turn [[product:slug]] markers into names and product cards (only real products). */
+function finishReply(text, ctx) {
+  const slugs = [...text.matchAll(/\[\[product:([a-z0-9-]+)\]\]/g)].map((m) => m[1]);
+  const products = [...new Set(slugs)].map((s) => ctx.products.find((p) => p.slug === s)).filter(Boolean).slice(0, 3);
+  const reply = text.replace(/\[\[product:([a-z0-9-]+)\]\]/g, (_, s) => ctx.products.find((p) => p.slug === s)?.name ?? '').trim();
+  return { reply: reply || contactLine(ctx.settings), products: products.map(publicProduct) };
+}
+
+/** Live reply: tries each configured provider in order (Claude, ChatGPT, Gemini). Throws if all fail. */
 export async function liveReply(history, ctx, env = process.env, orderLookup = null) {
+  let lastError;
+  for (const provider of await liveProviders(env)) {
+    try {
+      if (provider === 'anthropic') return { provider, ...(await claudeReply(history, ctx, env, orderLookup)) };
+      const system = `${SYSTEM}\n\nSTORE DATA:\n${JSON.stringify(knowledge(ctx.settings, ctx.products))}${orderLookup ? `\n\n${orderBlock(orderLookup)}` : ''}`;
+      return { provider, ...finishReply(await providerChat(provider, { system, history, env, fetchImpl: ctx.fetchImpl ?? fetch }), ctx) };
+    } catch (e) {
+      lastError = e;
+      console.error(`[assistant] ${provider} failed:`, e?.status ?? '', e?.message);
+    }
+  }
+  throw lastError ?? new Error('No AI provider configured');
+}
+
+async function claudeReply(history, ctx, env, orderLookup) {
   const Anthropic = await loadSdk();
   const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
   const response = await client.beta.messages.create({
@@ -214,16 +305,12 @@ export async function liveReply(history, ctx, env = process.env, orderLookup = n
     system: [
       { type: 'text', text: `${SYSTEM}\n\nSTORE DATA:\n${JSON.stringify(knowledge(ctx.settings, ctx.products))}`, cache_control: { type: 'ephemeral' } },
       // After the cached block so the store-data prefix stays cacheable.
-      ...(orderLookup ? [{ type: 'text', text: `ORDER LOOKUP (${orderLookup.number}): ${orderLookup.status === 'found' ? JSON.stringify(orderFacts(orderLookup.order)) : orderLookup.status === 'limited' ? 'too many checks; ask the customer to wait 10 minutes or use /track' : 'no order matches that number and email'}` }] : []),
+      ...(orderLookup ? [{ type: 'text', text: orderBlock(orderLookup) }] : []),
     ],
     messages: history,
   });
   if (response.stop_reason === 'refusal') return { reply: `I can’t help with that. ${contactLine(ctx.settings)}` };
-  const text = response.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n').trim();
-  const slugs = [...text.matchAll(/\[\[product:([a-z0-9-]+)\]\]/g)].map((m) => m[1]);
-  const products = [...new Set(slugs)].map((s) => ctx.products.find((p) => p.slug === s)).filter(Boolean).slice(0, 3);
-  const reply = text.replace(/\[\[product:([a-z0-9-]+)\]\]/g, (_, s) => ctx.products.find((p) => p.slug === s)?.name ?? '').trim();
-  return { reply: reply || contactLine(ctx.settings), products: products.map(publicProduct) };
+  return finishReply(response.content.filter((b) => b.type === 'text').map((b) => b.text).join('\n').trim(), ctx);
 }
 
 /** Validate chat history from the browser: alternating roles, bounded size. */
@@ -245,6 +332,10 @@ export async function answer(messages, ctx, env = process.env) {
   // Order status only for a matching order number + checkout email (same check as the Track order page).
   const ref = orderRefFrom(history);
   const orderLookup = ref && ctx.lookupOrder ? { number: ref.number, ...ctx.lookupOrder(ref.number, ref.email) } : null;
+  const cancel = cancellationReply(last, orderLookup, { ...ctx, cancelOrder: ref && ctx.cancelOrder ? () => ctx.cancelOrder(ref.number, ref.email) : null });
+  if (cancel) return { mode: (await assistantMode(env)) === 'live' ? 'live' : 'demo', ...cancel };
+  const ret = returnReply(last, orderLookup, { ...ctx, requestReturn: ref && ctx.requestReturn ? (reason) => ctx.requestReturn(ref.number, ref.email, reason) : null });
+  if (ret) return { mode: (await assistantMode(env)) === 'live' ? 'live' : 'demo', ...ret };
   if ((await assistantMode(env)) === 'live') {
     try {
       return { mode: 'live', ...(await liveReply(history, ctx, env, orderLookup)) };

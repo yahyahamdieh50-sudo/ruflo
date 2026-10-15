@@ -15,7 +15,8 @@ The repository this lives in (`ruflo`) is an AI-orchestration toolkit. It has no
 | Database | Built-in `node:sqlite` (`data/yahivo.db`) | Transactions for stock and orders, a single file, easy to back up |
 | Frontend | Vanilla ES modules + CSS, no build step | Fast to load, nothing to compile |
 | Payments | Network International N-Genius or Stripe Checkout (hosted pages), **only when keys are set** | Card data never touches this server |
-| AI assistant | Anthropic Claude via the official SDK, **only when `ANTHROPIC_API_KEY` is set** | Otherwise a clearly labelled demo mode |
+| AI assistant | Claude (official SDK), ChatGPT or Gemini (REST), **only when a key is set** | Otherwise a clearly labelled demo mode |
+| Messaging | n8n workflows for WhatsApp, Messenger and Instagram (`n8n/`), **only when n8n env vars are set** | The store never holds Meta tokens |
 
 The folder is self-contained (`examples/yahivo-store/`). You can move it into its own repository at any time.
 
@@ -37,6 +38,11 @@ On first start the database is created with **sample products** (clearly bannere
 | `SITE_URL` | Public URL, e.g. `https://shop.yahivo.com`. Used for canonical/social links; `https://` also turns on secure cookies. |
 | `ANTHROPIC_API_KEY` | Turns the assistant from demo to live (see below). |
 | `YAHIVO_AI_MODEL` | Optional model override (default `claude-opus-5-5`). |
+| `OPENAI_API_KEY`, `OPENAI_MODEL` | ChatGPT (both needed; the model name comes from your OpenAI dashboard). |
+| `GEMINI_API_KEY`, `GEMINI_MODEL` | Google Gemini (both needed; the model name comes from Google AI Studio). |
+| `AI_PROVIDER` | Which AI to try first: `anthropic`, `openai` or `gemini`. The others are backups. |
+| `N8N_API_TOKEN` | Lets your n8n workflow ask the AI for WhatsApp / Messenger / Instagram replies (32+ random characters). |
+| `N8N_WEBHOOK_URL`, `N8N_WEBHOOK_SECRET` | Sends order events (placed, status changed, return requested) to your n8n webhook. |
 | `ZIINA_API_TOKEN` | Turn on Ziina payments (test mode). |
 | `ZIINA_LIVE=1` | Switch Ziina from test mode to live payments (only after a successful test payment). |
 | `NGENIUS_API_KEY`, `NGENIUS_OUTLET_REF` | Turn on card payments via Network International N-Genius (sandbox by default). |
@@ -53,7 +59,7 @@ Keep secrets in a private `.env` file: copy `.env.example` to `.env` and fill it
 
 ```bash
 npm run check      # syntax, seed data, 500-line limit, no secret values in public/
-npm test           # 41 unit + API tests (in-memory DB, mocked Ziina / N-Genius)
+npm test           # unit + API tests (in-memory DB, mocked Ziina / N-Genius / OpenAI / Gemini / n8n)
 npm run test:e2e   # Playwright/Chromium: admin setup, desktop + mobile purchase, fulfilment, slip/CSV/privacy, assistant
 ```
 
@@ -125,9 +131,41 @@ The store is set up with **iMile** as its cash-on-delivery courier. iMile collec
 The chat ("Ask AI" button, bottom right) is the store's first line of customer support, 24/7. It is labelled as an AI assistant everywhere: chat header, Contact page, order page and FAQ.
 
 - **What it does:** recommends in-stock hoodies by style, colour, size and budget, and answers sizing, delivery, payment (cash on delivery), packing, tax and returns questions from your store data. It also **checks order status** once the customer gives their order number (YH-1001) **and** the email used at checkout. This is the same check as the Track order page and shares its rate limit (10 checks per 10 minutes per device). It shows status, items, total, payment and courier/tracking, never the address.
-- **What it hands to you:** changes, cancellations, refunds and exchanges. It cannot do those, so it gives the customer your WhatsApp/phone/email. It never invents stock, delivery dates or order status.
+- **Return requests:** for a **Delivered** order, the customer replies `RETURN YH-1001 too small`. The store records the request once, shows it on the admin order page and in the daily summary, and tells the customer the team will contact them. It never approves a refund; you decide and arrange it.
+- **Cancels orders by itself:** a verified customer can cancel an order while it is still **Received** (and unpaid). The AI explains what will be cancelled and the customer must reply exactly `CANCEL YH-1001`. The store's own code then cancels it and returns the stock; the AI model never executes anything itself. Packed or shipped orders, refunds, exchanges and address changes go to you via WhatsApp/phone/email.
+- **AI admin assistant (Admin → AI assistant):** you type plain requests: "what do I need to pack today?", "mark YH-1003 packed", "YH-1003 shipped with iMile 6031225370927", "YH-1003 paid", "cancel YH-1003", "set Crown black M stock to 5", "low stock". It lists the changes with checkboxes and **nothing changes until you press Confirm**. Every change is re-checked against live data when you confirm, and recorded in the order history as "admin (via AI assistant)".
+- **Daily summary:** the admin Dashboard opens with today's summary: new orders, what to pack, parcels waiting for iMile, delivered orders whose cash isn't marked paid, and low or sold-out stock. It is computed from your data, so it never guesses.
+- **ChatGPT and Gemini:** set `OPENAI_API_KEY` + `OPENAI_MODEL` and/or `GEMINI_API_KEY` + `GEMINI_MODEL`. With several keys set, `AI_PROVIDER` is tried first and the others take over if it fails; if all fail, the chat uses basic answers. The same rules apply to every provider (store data only, verified order lookup, no invented details). Both the customer chat and the admin assistant use them. Each provider bills you separately at its own prices.
 - **Basic mode (current):** automatic rule-based answers built only from your store data, labelled *"Basic mode"*. It works with no API key.
 - **Full AI mode:** add `ANTHROPIC_API_KEY` to the Render environment (or `.env` locally) and redeploy; `npm install` already installs the AI library. Answers then come from Claude (`claude-opus-5-5` by default), still grounded only in your store data and the verified order lookup. Cost is roughly 1 US cent per answer (about $4 per million input tokens and $20 per million output tokens; the store data is cached between messages). To make it about 10 times cheaper, set `YAHIVO_AI_MODEL=claude-haiku-5-5`. If the AI service fails, the chat falls back to basic answers.
+
+## WhatsApp, Facebook Messenger and Instagram via n8n
+
+The store doesn't connect to Meta itself. Your **n8n** (n8n Cloud or self-hosted) does, using two ready-made workflows in `n8n/`:
+
+| Workflow | What it does |
+|---|---|
+| `n8n/yahivo-meta-inbox.json` | A customer messages you on **WhatsApp**, **Messenger** or **Instagram** → n8n asks the store's AI → the reply goes back in the same app. Customers can ask about products, sizes and delivery, **track an order** (order number + checkout email), **cancel** a Received order (`CANCEL YH-1001`) and **request a return** for a delivered order (`RETURN YH-1001 reason`). The AI remembers the last 20 messages per customer for 24 hours. |
+| `n8n/yahivo-order-updates.json` | The store sends every order event to n8n → n8n sends the customer a WhatsApp message: order received (with the order link), preparing, packed, with iMile (with tracking link), delivered, cancelled, and return request received. |
+
+**Setup (about 1 hour, in your accounts; I can't access them):**
+1. **Store:** generate two random secrets (for example `openssl rand -hex 32`), then set `N8N_API_TOKEN` and `N8N_WEBHOOK_SECRET` in Render → Environment. Set `N8N_WEBHOOK_URL` in step 3.
+2. **Meta:** at developers.facebook.com, create a *Business* app linked to your Meta Business account, then add **WhatsApp** (your business number, its *Phone number ID* and a permanent access token from a System User), **Messenger** (connect the YAHIVO Facebook Page and generate a Page access token) and **Instagram** (connect the Instagram professional account linked to that Page).
+3. **n8n:** *Import from file* each JSON, then:
+   - Create **Header Auth** credentials: `YAHIVO store` (Name `Authorization`, Value `Bearer <N8N_API_TOKEN>`), `WhatsApp` (`Authorization` / `Bearer <WhatsApp token>`), `Facebook Page` (`Authorization` / `Bearer <Page token>`) and `YAHIVO events` (Name `X-YAHIVO-Token`, Value `<N8N_WEBHOOK_SECRET>`). Select them on the nodes, as each node's note says.
+   - In *Answer verification*, replace `REPLACE_WITH_YOUR_VERIFY_TOKEN` with a word of your choice. In *Send WhatsApp template*, replace `REPLACE_WITH_PHONE_NUMBER_ID`. If your store address isn't `https://shop.yahivo.com`, change it in *Ask YAHIVO AI*.
+   - Activate both workflows. Copy the **Production URL** of *Order events from store* into the store's `N8N_WEBHOOK_URL` and redeploy.
+4. **Meta webhooks:** for WhatsApp, Messenger and Instagram, set the callback URL to the *Production URL* of *Meta messages (POST)* (path `/webhook/yahivo-meta`) with the same verify token. Subscribe to the `messages` field.
+5. **WhatsApp template:** in WhatsApp Manager, create a *Utility* template named `yahivo_order_update`, language English, body `Hi {{1}}, an update on your YAHIVO order {{2}}: {{3}}`. Wait for Meta to approve it.
+6. **Test:** message your WhatsApp number, Page and Instagram from a personal account ("do you have black hoodies in M?", then your order number + email). Place a test order with your own phone number and move it through the statuses in the admin.
+
+**Limits to know:**
+- **WhatsApp:** you can reply freely only within 24 hours of the customer's last message; after that, only approved templates can be sent (that's why order updates use one). Meta charges per template conversation. Messenger and Instagram replies also have to be within 24 hours, and the Messenger and Instagram permissions need **Meta App Review** before the public (not just app admins/testers) gets replies.
+- **Phone numbers:** order updates go to the phone number from checkout. Local UAE numbers (05x…) are converted to 9715x…
+- **Security:** the chat endpoint only works with the secret token, and it is limited to 20 messages per minute per customer. Order details still need the order number **and** checkout email, exactly like the website. The inbox workflow doesn't check Meta's `X-Hub-Signature-256`. Keep the webhook path private, or add signature checking in n8n if you need it.
+- **Privacy:** with n8n connected, customer name, phone, email, items and order links go to your n8n and Meta. Mention WhatsApp/Messenger/Instagram and n8n in your privacy policy (Admin → Policies) before switching it on.
+- The workflows use Graph API `v23.0`. Meta retires old versions after about two years, so update the URLs when Meta asks.
+- ⚠️ Built from the public n8n and Meta API docs and tested with mocked calls, not your accounts. Test each channel before telling customers about it.
 
 ## Going live on Render at shop.yahivo.com (not done yet)
 
@@ -197,4 +235,4 @@ Admin → Dashboard shows this live. Today, everything below is still needed fro
 - [ ] Optional: opening hours
 - [ ] **Social profile URLs** for Facebook, Instagram and TikTok. The links you sent are the Facebook Accounts Centre/settings page and the Instagram home page, not profile pages, so they were not added. TikTok was not provided.
 - [ ] **Review the adapted policies**, and have the privacy page legally reviewed
-- [ ] Optional: `ANTHROPIC_API_KEY` for the live assistant; a GA4 ID (update the privacy policy and cookie consent if you enable it)
+- [ ] Optional: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` or `GEMINI_API_KEY` for the live assistant; n8n for WhatsApp/Messenger/Instagram (update the privacy policy first); a GA4 ID (update the privacy policy and cookie consent if you enable it)

@@ -1,0 +1,89 @@
+{
+  "name": "YAHIVO – order updates to customers on WhatsApp",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "yahivo-order-events",
+        "authentication": "headerAuth",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "21758279-940f-53f6-b932-9f6146e64e44",
+      "name": "Order events from store",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "dbc07046-ef17-5cb3-8e7b-8ba78f3777e2",
+      "notes": "Credential: Header Auth — Name: X-YAHIVO-Token, Value: <your N8N_WEBHOOK_SECRET>. Put this webhook's Production URL in the store's N8N_WEBHOOK_URL.",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Builds one WhatsApp template message per order event from the YAHIVO store.\n// Template (create it in WhatsApp Manager, category Utility, language English):\n//   name: yahivo_order_update   body: Hi {{1}}, an update on your YAHIVO order {{2}}: {{3}}\nconst STATUS_TEXT = {\n  preparing: () => 'we are preparing it.',\n  packed: () => 'it is packed and waiting for the courier.',\n  handed_to_courier: (o) => `it is with ${o.courierName ?? 'the courier'}.${o.trackingUrl || o.trackingNumber ? ` Tracking: ${o.trackingUrl ?? o.trackingNumber}` : ''}`,\n  delivered: () => 'it has been delivered. Thank you for shopping with YAHIVO.',\n  cancelled: () => 'it has been cancelled.',\n};\nconst out = [];\nfor (const item of $input.all()) {\n  const { event, order: o } = item.json.body ?? {};\n  if (!o?.customer?.phone) continue;\n  let text = null;\n  if (event === 'order.created') text = `we received it. Total ${o.currency} ${Number(o.total).toFixed(2)} (${o.paymentMethod}). Details: ${o.orderUrl}`;\n  else if (event === 'order.status_changed' && STATUS_TEXT[o.status]) text = STATUS_TEXT[o.status](o);\n  else if (event === 'order.return_requested') text = 'we received your return request. Our team will contact you to arrange it.';\n  if (!text) continue;\n  // WhatsApp wants the number in international format without + or spaces. Local UAE numbers (05x) get 971.\n  let to = String(o.customer.phone).replace(/\\D/g, '');\n  if (to.startsWith('00')) to = to.slice(2);\n  else if (to.startsWith('0')) to = `971${to.slice(1)}`;\n  const firstName = String(o.customer.name ?? '').split(' ')[0] || 'there';\n  out.push({ json: { to, firstName, number: o.number, text: text.replace(/\\s+/g, ' ').slice(0, 900) } });\n}\nreturn out;"
+      },
+      "id": "4675a602-3db0-5775-8998-2189c6877cd0",
+      "name": "Build WhatsApp message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v23.0/REPLACE_WITH_PHONE_NUMBER_ID/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ messaging_product: 'whatsapp', to: $json.to, type: 'template', template: { name: 'yahivo_order_update', language: { code: 'en' }, components: [{ type: 'body', parameters: [{ type: 'text', text: $json.firstName }, { type: 'text', text: $json.number }, { type: 'text', text: $json.text }] }] } }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "da78b0bc-cade-5b86-89fb-129b22e44caa",
+      "name": "Send WhatsApp template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        0
+      ],
+      "notes": "Replace REPLACE_WITH_PHONE_NUMBER_ID (WhatsApp Manager → API setup). Credential: Header Auth — Name: Authorization, Value: Bearer <WhatsApp access token>.",
+      "notesInFlow": true
+    }
+  ],
+  "connections": {
+    "Order events from store": {
+      "main": [
+        [
+          {
+            "node": "Build WhatsApp message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build WhatsApp message": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

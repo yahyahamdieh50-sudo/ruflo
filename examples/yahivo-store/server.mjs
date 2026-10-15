@@ -8,9 +8,11 @@ import { Store } from './lib/db.mjs';
 import { AdminAuth, RateLimiter } from './lib/auth.mjs';
 import { facets, filterProducts, parseQuery, publicProduct } from './lib/catalog.mjs';
 import { CheckoutConflict, paymentMethods, placeOrder, quote } from './lib/checkout.mjs';
-import { findForTracking, publicOrder, releaseStock, updateOrder, ORDER_STATUSES } from './lib/orders.mjs';
+import { findForTracking, publicOrder, releaseStock, requestReturn, updateOrder, ORDER_STATUSES, STATUS_LABELS } from './lib/orders.mjs';
 import { applySection, launchChecklist, publicSettings, SECTIONS } from './lib/settings.mjs';
-import { answer, assistantMode } from './lib/assistant.mjs';
+import { answer, assistantMode, liveProviders } from './lib/assistant.mjs';
+import { PROVIDER_LABELS } from './lib/ai-providers.mjs';
+import { Conversations, createNotifier, integrationTokenOk, parseChatRequest, plainReply } from './lib/integrations.mjs';
 import { createCheckoutSession, stripeConfigured, verifyWebhook } from './lib/stripe.mjs';
 import { createNgeniusOrder, ngeniusConfigured, ngeniusStatus } from './lib/ngenius.mjs';
 import { createZiinaPayment, ziinaConfigured, ziinaLive, ziinaStatus } from './lib/ziina.mjs';
@@ -24,6 +26,7 @@ import { routeMeta, robots, sitemap } from './lib/seo.mjs';
 import { clientIp, HttpError, readBody, readJson, securityHeaders, sendJson, serveStatic } from './lib/http.mjs';
 import { validateProduct, ValidationError } from './lib/validate.mjs';
 import { anonymiseOrder, ordersCsv } from './lib/fulfilment.mjs';
+import { applyAction, checkAction, dailySummary, liveCommand, parseCommand, summaryText } from './lib/admin-ai.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(here, 'public');
@@ -38,6 +41,34 @@ export function createApp({ store = new Store(), env = process.env, fetchImpl = 
   const secure = siteUrl.startsWith('https://');
   const shell = readFileSync(path.join(PUBLIC, 'index.html'), 'utf8');
   const adminShell = readFileSync(path.join(PUBLIC, 'admin.html'), 'utf8');
+  // n8n: order events out (N8N_WEBHOOK_URL) and channel chat in (N8N_API_TOKEN).
+  const notifier = createNotifier({ env, fetchImpl, siteUrl, statusLabels: STATUS_LABELS });
+  const conversations = new Conversations();
+  const notifyStatus = (before, after) => { if (after && before?.status !== after.status) notifier.send('order.status_changed', after); };
+
+  // Order tools for the AI assistant (website chat and n8n channels). Every action re-verifies number + checkout email.
+  const orderTools = (trackKey, channel) => ({
+    lookupOrder: (number, email) => {
+      if (!limiter.allow(trackKey, 10, 10 * 60_000)) return { status: 'limited' };
+      const order = findForTracking(store, number, email);
+      return order ? { status: 'found', order: publicOrder(store, order) } : { status: 'not_found' };
+    },
+    // Customer cancellation: only while "Received" and unpaid; stock is released by updateOrder.
+    cancelOrder: (number, email) => {
+      const order = findForTracking(store, number, email);
+      if (!order || order.status !== 'received' || order.paymentStatus === 'paid') return false;
+      notifyStatus(order, updateOrder(store, store.getSettings(), order.id, { status: 'cancelled', note: `Cancelled by the customer through the AI assistant (${channel}).` }, 'ai-assistant'));
+      return true;
+    },
+    // Return request: only for delivered orders, once; the team arranges it.
+    requestReturn: (number, email, reason) => {
+      const order = findForTracking(store, number, email);
+      if (!requestReturn(store, order, reason, channel)) return false;
+      notifier.send('order.return_requested', store.getOrder(order.id));
+      return true;
+    },
+  });
+  const aiLabel = async () => (await liveProviders(env)).map((x) => PROVIDER_LABELS[x]).join(' → ');
 
   const stripe = () => stripeConfigured(env);
   const ctx = () => {
@@ -98,6 +129,7 @@ export function createApp({ store = new Store(), env = process.env, fetchImpl = 
           throw new HttpError(502, 'We could not start the secure payment. You have not been charged — please try again.');
         }
       }
+      notifier.send('order.created', store.getOrder(placed.id));
       return sendJson(res, 201, { number: placed.number, token: placed.token, redirectUrl });
     }
     if ((match = p.match(/^\/api\/orders\/([A-Za-z0-9_-]{10,64})$/)) && m === 'GET') {
@@ -145,15 +177,27 @@ export function createApp({ store = new Store(), env = process.env, fetchImpl = 
     if (p === '/api/assistant' && m === 'POST') {
       limit(req, 'assistant', 20, 60_000);
       const b = await readJson(req, 32 * 1024);
-      // The assistant may look up an order only with a matching number + checkout email; shares the Track order rate limit.
-      const lookupOrder = (number, email) => {
-        if (!limiter.allow(`track:${clientIp(req)}`, 10, 10 * 60_000)) return { status: 'limited' };
-        const order = findForTracking(store, number, email);
-        return order ? { status: 'found', order: publicOrder(store, order) } : { status: 'not_found' };
-      };
-      const out = await answer(b?.messages, { ...ctx(), lookupOrder }, env);
+      // Order lookups share the Track order rate limit.
+      const out = await answer(b?.messages, { ...ctx(), fetchImpl, ...orderTools(`track:${clientIp(req)}`, 'website chat') }, env);
       if (out.error) throw new HttpError(400, out.error);
       return sendJson(res, 200, out);
+    }
+    // n8n → AI assistant for WhatsApp / Messenger / Instagram. Server-to-server only (bearer token).
+    if (p === '/api/integrations/chat' && m === 'POST') {
+      const ok = integrationTokenOk(env, req.headers.authorization);
+      if (ok === null) throw new HttpError(404, 'Not found.');
+      if (!ok) { limit(req, 'integration-auth', 10, 60_000); throw new HttpError(401, 'Invalid token.'); }
+      const body = parseChatRequest(await readJson(req, 16 * 1024));
+      if (!body) throw new HttpError(400, 'Send { channel: whatsapp|messenger|instagram|other, userId, text }.');
+      const key = `${body.channel}:${body.userId}`;
+      if (!limiter.allow(`integration:${key}`, 20, 60_000)) throw new HttpError(429, 'Too many messages from this customer. Please wait a moment.');
+      conversations.add(key, 'user', body.text);
+      const c = ctx();
+      const out = await answer(conversations.history(key), { ...c, fetchImpl, ...orderTools(`track:${key}`, body.channel) }, env);
+      if (out.error) throw new HttpError(400, out.error);
+      const reply = plainReply(out, siteUrl, c.settings.currency);
+      conversations.add(key, 'assistant', reply);
+      return sendJson(res, 200, { reply, mode: out.mode, provider: out.provider ?? null });
     }
     if (p === '/api/stripe/webhook' && m === 'POST') {
       if (!stripe()) throw new HttpError(404, 'Not found.');
@@ -196,15 +240,48 @@ export function createApp({ store = new Store(), env = process.env, fetchImpl = 
       const products = store.listProducts({ includeUnpublished: true });
       const { counts } = store.listOrders({ limit: 1 });
       const aiLive = (await assistantMode(env)) === 'live';
+      const n8nChat = integrationTokenOk(env, '') !== null;
       return sendJson(res, 200, {
         checklist: launchChecklist(settings, products, { stripe: stripe() || ngeniusConfigured(env) || ziinaConfigured(env), aiLive, adminPasswordSet: auth.enabled }),
         orderCounts: counts,
         integrations: {
           payments: [ziinaConfigured(env) && `Ziina configured (${ziinaLive(env) ? 'LIVE' : 'TEST mode'}) — run a test payment before launch`, ngeniusConfigured(env) && `Network International N-Genius configured (${env.NGENIUS_API_BASE ? 'custom API base' : 'SANDBOX'}) — run a test payment before launch`, stripe() && 'Stripe configured — run a test payment before launch'].filter(Boolean).join(' · ') || 'No payment provider configured',
           courier: 'Manual workflow — no courier API connected',
-          assistant: aiLive ? 'Live (Claude)' : 'Demo mode',
+          assistant: aiLive ? `Full AI (${await aiLabel()}): customer chat + admin assistant` : 'Basic mode (add ANTHROPIC_API_KEY, OPENAI_API_KEY or GEMINI_API_KEY for full AI)',
+          n8n: [notifier.enabled && 'order events → n8n webhook', n8nChat && 'WhatsApp / Messenger / Instagram chat via n8n'].filter(Boolean).join(' · ') || 'Not connected (see README: n8n)',
         },
       });
+    }
+    // AI admin assistant: proposes actions; /apply runs only what the owner confirmed, re-validated.
+    if (p === '/api/admin/summary' && m === 'GET') {
+      const summary = dailySummary(store);
+      return sendJson(res, 200, { summary, text: summaryText(summary) });
+    }
+    if (p === '/api/admin/ai' && m === 'POST') {
+      limit(req, 'admin-ai', 30, 60_000);
+      const message = String((await readJson(req))?.message ?? '').slice(0, 1000);
+      const c = { store, settings: store.getSettings(), fetchImpl };
+      const out = (await liveCommand(message, c, env)) ?? parseCommand(message, c);
+      const live = (await assistantMode(env)) === 'live';
+      return sendJson(res, 200, { mode: live ? 'live' : 'basic', reply: out.reply, actions: out.actions.map((a) => ({ action: a, ...checkAction(a, c) })) });
+    }
+    if (p === '/api/admin/ai/apply' && m === 'POST') {
+      const actions = (await readJson(req))?.actions;
+      if (!Array.isArray(actions) || !actions.length || actions.length > 20) throw new HttpError(400, 'Nothing to apply.');
+      const c = { store, settings: store.getSettings() };
+      const results = actions.map((a) => {
+        const chk = checkAction(a, c);
+        if (!chk.ok) return { description: chk.description, ok: false, error: chk.error };
+        try {
+          const before = a.number ? store.getOrderByNumber(String(a.number).toUpperCase()) : null;
+          applyAction(a, c);
+          if (before) notifyStatus(before, store.getOrder(before.id));
+          return { description: chk.description, ok: true };
+        } catch (e) {
+          return { description: chk.description, ok: false, error: e instanceof ValidationError ? Object.values(e.fields).join(' ') : 'Could not apply.' };
+        }
+      });
+      return sendJson(res, 200, { results });
     }
     if (p === '/api/admin/settings' && m === 'GET') return sendJson(res, 200, { settings: store.getSettings(), sections: SECTIONS });
     if ((match = p.match(/^\/api\/admin\/settings\/([a-zA-Z]+)$/)) && m === 'PUT') {
@@ -266,8 +343,10 @@ export function createApp({ store = new Store(), env = process.env, fetchImpl = 
         return sendJson(res, 200, { order, events: store.events(id) });
       }
       if (m === 'PATCH') {
+        const before = store.getOrder(id);
         const order = updateOrder(store, store.getSettings(), id, await readJson(req));
         if (!order) throw new HttpError(404, 'Order not found.');
+        notifyStatus(before, order);
         return sendJson(res, 200, { order, events: store.events(id) });
       }
     }
@@ -312,7 +391,7 @@ export function createApp({ store = new Store(), env = process.env, fetchImpl = 
     }
     return undefined;
   });
-  return { server, store, port, siteUrl };
+  return { server, store, port, siteUrl, notifier };
 }
 
 /** Accept JPEG / PNG / WebP up to 5 MB, verified by magic bytes; random filename. */

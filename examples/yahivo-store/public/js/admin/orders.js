@@ -61,6 +61,7 @@ async function detail(el, id) {
     <p class="muted">Placed ${esc(new Date(o.createdAt).toLocaleString())} · Payment: ${esc(o.payment.label)} — <strong>${esc(PAYMENT[o.paymentStatus])}</strong></p>
     <div class="actions"><button type="button" class="btn btn-ghost btn-small" id="print-slip">Print packing slip</button>${['ngenius', 'ziina'].includes(o.payment.method) && o.paymentStatus === 'awaiting_payment' ? `<button type="button" class="btn btn-ghost btn-small" id="verify-pay">Check payment with ${o.payment.method === 'ziina' ? 'Ziina' : 'Network International'}</button>` : ''}</div><br>
     ${o.lines.some((l) => l.sample) ? '<div class="panel-note">This order contains SAMPLE products (test data).</div>' : ''}
+    ${o.returnRequest ? `<div class="panel-note"><strong>Return requested</strong> ${esc(new Date(o.returnRequest.at).toLocaleString())} (${esc(o.returnRequest.channel ?? 'website')}): ${esc(o.returnRequest.reason)}. Contact the customer to arrange it; record any refund under Payment status.</div>` : ''}
     <div class="two-col">
       <div>
         <section class="panel"><h2>Update order</h2>

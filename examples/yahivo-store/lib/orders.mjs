@@ -104,6 +104,7 @@ export function publicOrder(store, order) {
     tax: order.tax,
     payment: { method: order.payment.method, label: order.payment.label },
     fulfilment: { courierName: order.fulfilment.courierName, trackingNumber: order.fulfilment.trackingNumber, trackingUrl: order.fulfilment.trackingUrl },
+    returnRequest: order.returnRequest ? { at: order.returnRequest.at, status: order.returnRequest.status } : null,
     history: store.events(order.id).filter((e) => e.type === 'status').map((e) => ({ at: e.at, status: e.status, label: STATUS_LABELS[e.status] })),
   };
 }
@@ -115,4 +116,17 @@ export function findForTracking(store, number, email) {
   if (!n || !e || !EMAIL_RE.test(e)) return null;
   const order = store.getOrderByNumber(n);
   return order && order.email === e ? order : null;
+}
+
+/** Record a customer return request for a delivered order (the team arranges the return; no refund is approved here). */
+export function requestReturn(store, order, reason, channel = 'website') {
+  if (!order || order.status !== 'delivered' || order.returnRequest) return false;
+  const r = cleanText(reason, { max: 300 });
+  if (!r) return false;
+  store.transaction(() => {
+    order.returnRequest = { reason: r, at: new Date().toISOString(), status: 'requested', channel };
+    store.saveOrder(order);
+    store.addEvent(order.id, { type: 'return', note: `Return requested via ${channel}: ${r}`, actor: 'ai-assistant' });
+  });
+  return true;
 }

@@ -4,7 +4,7 @@ import { randomBytes } from 'node:crypto';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { Store } from './lib/db.mjs';
+import { Store, usableDir } from './lib/db.mjs';
 import { AdminAuth, RateLimiter } from './lib/auth.mjs';
 import { facets, filterProducts, parseQuery, publicProduct } from './lib/catalog.mjs';
 import { CheckoutConflict, paymentMethods, placeOrder, quote } from './lib/checkout.mjs';
@@ -31,7 +31,9 @@ import { applyAction, checkAction, dailySummary, liveCommand, parseCommand, summ
 const here = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC = path.join(here, 'public');
 // Admin photo uploads; point YAHIVO_UPLOADS at a persistent disk in production.
-const UPLOADS = path.resolve(process.env.YAHIVO_UPLOADS || path.join(PUBLIC, 'uploads'));
+// Falls back to a temporary folder (with a warning) if that path can't be written.
+const uploadsDir = usableDir(path.resolve(process.env.YAHIVO_UPLOADS || path.join(PUBLIC, 'uploads')), 'uploads');
+const UPLOADS = uploadsDir.dir;
 
 export function createApp({ store = new Store(), env = process.env, fetchImpl = fetch } = {}) {
   const auth = new AdminAuth(store, env.ADMIN_PASSWORD);
@@ -244,6 +246,9 @@ export function createApp({ store = new Store(), env = process.env, fetchImpl = 
       return sendJson(res, 200, {
         checklist: launchChecklist(settings, products, { stripe: stripe() || ngeniusConfigured(env) || ziinaConfigured(env), aiLive, adminPasswordSet: auth.enabled }),
         orderCounts: counts,
+        storageWarning: store.temporary || uploadsDir.temporary
+          ? `Data is NOT being saved permanently: ${[store.temporary, uploadsDir.wanted].filter(Boolean).join(' and ')} can't be written, so orders, settings and photos are kept in a temporary folder and are lost when the server restarts or redeploys. Attach a persistent disk at that path (Render: Starter plan → Disk) before taking real orders.`
+          : null,
         integrations: {
           payments: [ziinaConfigured(env) && `Ziina configured (${ziinaLive(env) ? 'LIVE' : 'TEST mode'}) — run a test payment before launch`, ngeniusConfigured(env) && `Network International N-Genius configured (${env.NGENIUS_API_BASE ? 'custom API base' : 'SANDBOX'}) — run a test payment before launch`, stripe() && 'Stripe configured — run a test payment before launch'].filter(Boolean).join(' · ') || 'No payment provider configured',
           courier: 'Manual workflow — no courier API connected',

@@ -40,6 +40,7 @@ async function dashboard(el) {
   const counts = data.orderCounts;
   el.innerHTML = `
     <h1>Dashboard</h1>
+    ${data.storageWarning ? `<div class="panel-note" role="alert"><strong>⚠ ${esc(data.storageWarning)}</strong></div>` : ''}
     <section class="panel"><h2>Today</h2><p class="pre">${esc(today.text)}</p><a class="btn btn-small" href="#/ai">Ask the AI assistant</a></section>
     <div class="stats">${Object.entries(STATUS).map(([k, l]) => `<a class="stat" href="#/orders?status=${k}"><strong>${counts[k] ?? 0}</strong>${esc(l)}</a>`).join('')}</div>
     <section class="panel"><h2>Integrations</h2>

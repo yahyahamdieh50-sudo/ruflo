@@ -1,7 +1,8 @@
 // SQLite persistence (built-in node:sqlite). All calls are synchronous, so a
 // single Node process never interleaves two stock updates.
 import { DatabaseSync } from 'node:sqlite';
-import { readFileSync, mkdirSync } from 'node:fs';
+import { accessSync, constants, readFileSync, mkdirSync } from 'node:fs';
+import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { validateProduct } from './validate.mjs';
@@ -35,6 +36,25 @@ CREATE TABLE IF NOT EXISTS admin_sessions (token_hash TEXT PRIMARY KEY, expires_
 `;
 
 const now = () => new Date().toISOString();
+/**
+ * Returns a writable folder: `dir` if it can be created and written, otherwise a temporary
+ * folder (data there is lost on restart). Hosts without a mounted disk (e.g. a Render
+ * free instance pointed at /var/data) then still start, with a warning in the admin.
+ */
+export function usableDir(dir, name) {
+  try {
+    mkdirSync(dir, { recursive: true });
+    accessSync(dir, constants.W_OK);
+    return { dir, temporary: false };
+  } catch (e) {
+    if (!['EACCES', 'EPERM', 'EROFS', 'ENOENT', 'ENOTDIR'].includes(e.code)) throw e;
+    const tmp = path.join(os.tmpdir(), 'yahivo', name);
+    mkdirSync(tmp, { recursive: true });
+    console.warn(`[storage] Cannot write to ${dir} (${e.code}). Using temporary ${tmp} — data is lost on restart. Attach a disk at ${dir} to keep it.`);
+    return { dir: tmp, temporary: true, wanted: dir };
+  }
+}
+
 const readSeed = (f) => JSON.parse(readFileSync(path.join(SEED_DIR, f), 'utf8'));
 
 export class Store {
@@ -44,7 +64,11 @@ export class Store {
    *   'yahivo' = the real catalogue (default), 'sample' = test products, 'none' = empty.
    */
   constructor(file = process.env.YAHIVO_DB || DEFAULT_DB, { seed = process.env.YAHIVO_SEED || 'yahivo' } = {}) {
-    if (file !== ':memory:') mkdirSync(path.dirname(file), { recursive: true });
+    this.temporary = null;
+    if (file !== ':memory:') {
+      const where = usableDir(path.dirname(file), 'db');
+      if (where.temporary) { this.temporary = where.wanted; file = path.join(where.dir, path.basename(file)); }
+    }
     this.db = new DatabaseSync(file);
     this.db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
     this.db.exec(SCHEMA);

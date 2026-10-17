@@ -168,6 +168,21 @@ The store doesn't connect to Meta itself. Your **n8n** (n8n Cloud or self-hosted
 - The workflows use Graph API `v23.0`. Meta retires old versions after about two years, so update the URLs when Meta asks.
 - ⚠️ Built from the public n8n and Meta API docs and tested with mocked calls, not your accounts. Test each channel before telling customers about it.
 
+## Ads tracking: Meta Pixel and TikTok Pixel
+
+Admin → Analytics has three optional IDs: GA4, **Meta Pixel ID** (Facebook / Instagram ads) and **TikTok Pixel ID**. Each tracker loads only when its ID is saved, and the site's security policy (CSP) only allows that tracker's domains while it is on.
+
+| Store event | Meta Pixel | TikTok Pixel |
+|---|---|---|
+| Every page | PageView | page |
+| Product page | ViewContent | ViewContent |
+| Add to cart | AddToCart | AddToCart |
+| Place order clicked | InitiateCheckout | InitiateCheckout |
+| Order placed | Purchase (eventID = order number) | CompletePayment (event_id = order number) |
+| Search | Search | Search |
+
+Events carry product IDs (slugs), quantity, value and currency only — never names, emails, phone numbers or addresses. To get the IDs: Meta Events Manager → Connect data sources → Web → create a pixel; TikTok Ads Manager → Tools → Events → Web events → set up manually. Test with Meta's *Test events* tab and TikTok's *Pixel Helper*. The privacy page automatically lists each tracker you turn on; check cookie consent rules for your audience before running ads.
+
 ## Going live on Render at shop.yahivo.com (not done yet)
 
 Chosen setup: [Render](https://render.com) **Starter** web service plus a 1 GB persistent disk, about US$7.25/month. Check Render's pricing page for the current price. The store stays separate from www.yahivo.com. Only one DNS record is added for the `shop` subdomain.
@@ -236,4 +251,4 @@ Admin → Dashboard shows this live. Today, everything below is still needed fro
 - [ ] Optional: opening hours
 - [ ] **Social profile URLs** for Facebook, Instagram and TikTok. The links you sent are the Facebook Accounts Centre/settings page and the Instagram home page, not profile pages, so they were not added. TikTok was not provided.
 - [ ] **Review the adapted policies**, and have the privacy page legally reviewed
-- [ ] Optional: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` or `GEMINI_API_KEY` for the live assistant; n8n for WhatsApp/Messenger/Instagram (update the privacy policy first); a GA4 ID (update the privacy policy and cookie consent if you enable it)
+- [ ] Optional: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` or `GEMINI_API_KEY` for the live assistant; n8n for WhatsApp/Messenger/Instagram (update the privacy policy first); a GA4 ID and Meta / TikTok Pixel IDs (check cookie consent if you enable them)

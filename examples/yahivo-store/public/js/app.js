@@ -1,7 +1,7 @@
 // Client router + shell (header, footer, banner, cart badge).
 import { cart, getSettings } from './api.js';
 import { contactButtons, errorState, esc, loading, setLocale, socialLinks, topBarLinks } from './ui.js';
-import { initAnalytics } from './analytics.js';
+import { initAnalytics, pageView } from './analytics.js';
 import { initChat } from './chat.js';
 
 const routes = [
@@ -65,6 +65,7 @@ async function render() {
   }
   if (id !== renderId) return;
   main.focus({ preventScroll: true });
+  pageView();
 }
 
 function markNav(pathname) {

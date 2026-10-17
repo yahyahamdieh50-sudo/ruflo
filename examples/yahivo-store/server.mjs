@@ -306,6 +306,12 @@ export function createApp({ store = new Store(), env = process.env, fetchImpl = 
       });
       return sendJson(res, 200, { results });
     }
+    if ((match = p.match(/^\/api\/admin\/settings\/(policies|tax)\/recommended$/)) && m === 'POST') {
+      const recommended = JSON.parse(readFileSync(path.join(here, 'data', 'seed', 'settings.json'), 'utf8'))[match[1]];
+      const next = applySection(store.getSettings(), match[1], recommended);
+      store.saveSettings(next);
+      return sendJson(res, 200, { settings: next });
+    }
     if (p === '/api/admin/settings' && m === 'GET') return sendJson(res, 200, { settings: store.getSettings(), sections: SECTIONS });
     if ((match = p.match(/^\/api\/admin\/settings\/([a-zA-Z]+)$/)) && m === 'PUT') {
       const next = applySection(store.getSettings(), match[1], await readJson(req));

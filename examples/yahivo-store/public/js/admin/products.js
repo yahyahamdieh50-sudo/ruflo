@@ -6,11 +6,12 @@ const slugify = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').repla
 
 export default async function products(el, slug) {
   if (slug) return editor(el, slug);
-  const { products: list } = await adminApi('/api/admin/products');
+  const [{ products: list }, cat] = await Promise.all([adminApi('/api/admin/products'), adminApi('/api/admin/catalogue')]);
   const total = (p) => p.colors.reduce((s, c) => s + (c.stock ? Object.values(c.stock).reduce((a, b) => a + b, 0) : 0), 0);
   el.innerHTML = `<h1>Products</h1>
     ${list.some((p) => p.sample) ? '<div class="panel-note"><strong>Sample products are loaded.</strong> They exist only to test the store. Add your real hoodies, then unpublish or delete every item marked SAMPLE.</div>' : ''}
-    <div class="actions"><a class="btn" href="#/products/_new">+ Add product</a></div><br>
+    <div class="actions"><a class="btn" href="#/products/_new">+ Add product</a> <button type="button" class="btn btn-ghost" id="import-cat">Import Shopify catalogue (${cat.total} products)</button></div>
+    <p class="muted small">Loads all products from your Shopify store with their full-size photos and sizes (S–2XL/3XL). ${cat.published} are shown in the shop; the others are added <strong>hidden</strong> so you can check each design first (designs with other brands, characters or a real person’s photo need a licence) — open one and tick <em>Published</em> to show it. Stock you already set is kept; new sizes start at 10.</p><br>
     ${list.length ? `<div class="table-wrap"><table class="admin-table"><thead><tr><th>Product</th><th>Style</th><th>Price</th><th>Colours</th><th>Stock</th><th>Status</th></tr></thead><tbody>
       ${list.sort((a, b) => a.name.localeCompare(b.name)).map((p) => `<tr data-href="#/products/${esc(p.slug)}" tabindex="0">
         <td><a href="#/products/${esc(p.slug)}"><strong>${esc(p.name)}</strong></a> ${p.sample ? '<span class="badge badge-sample">Sample</span>' : ''}<br><span class="muted small">/product/${esc(p.slug)}</span></td>
@@ -20,6 +21,18 @@ export default async function products(el, slug) {
         <td>${p.published ? 'Published' : '<span class="muted">Hidden</span>'}</td></tr>`).join('')}
     </tbody></table></div>` : '<div class="panel empty"><h2>No products</h2></div>'}`;
   el.querySelectorAll('tr[data-href]').forEach((tr) => tr.addEventListener('click', (e) => { if (!e.target.closest('a')) location.hash = tr.dataset.href; }));
+  el.querySelector('#import-cat').addEventListener('click', async (e) => {
+    if (!confirm(`Import ${cat.total} products from your Shopify catalogue? Products not in it will be hidden (not deleted).`)) return;
+    e.target.disabled = true;
+    try {
+      const r = await adminApi('/api/admin/catalogue/import', { method: 'POST', body: {} });
+      toast(`Imported: ${r.added} new, ${r.updated} updated, ${r.published} shown in the shop${r.hidden ? `, ${r.hidden} old products hidden` : ''}.`);
+      products(el);
+    } catch (err) {
+      e.target.disabled = false;
+      toast(err.message, { error: true });
+    }
+  });
   return undefined;
 }
 

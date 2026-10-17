@@ -15,7 +15,22 @@ export default async function aiView(el) {
       <label for="ai-input" class="sr-only">Request</label>
       <input id="ai-input" maxlength="1000" autocomplete="off" placeholder="e.g. mark YH-1003 packed">
       <button class="btn" type="submit">Send</button>
-    </form>`;
+    </form>
+    <section class="panel ai-reply"><h2>Reply helper</h2>
+      <p class="muted">Got a message on TikTok, Instagram, WhatsApp or by email? Paste it here and the AI writes a reply from your store’s information. Check it, then copy and send it yourself. Nothing on the store changes.</p>
+      <form id="reply-form">
+        <div class="field"><label for="rp-msg">Customer’s message</label><textarea id="rp-msg" maxlength="1000" required placeholder="e.g. Do you have the Crown hoodie in black, size L? How much is delivery to Sharjah?"></textarea></div>
+        <div class="field-row">
+          <div class="field"><label for="rp-no">Order number <span class="hint">(optional)</span></label><input id="rp-no" maxlength="20" placeholder="YH-1001"></div>
+          <div class="field"><label for="rp-em">Order email <span class="hint">(optional)</span></label><input id="rp-em" type="email" maxlength="254"></div>
+        </div>
+        <button class="btn" type="submit">Suggest a reply</button>
+      </form>
+      <div id="rp-out" hidden>
+        <div class="field"><label for="rp-text">Suggested reply <span class="hint" id="rp-mode"></span></label><textarea id="rp-text" rows="8"></textarea></div>
+        <button class="btn btn-ghost btn-small" type="button" id="rp-copy">Copy reply</button>
+      </div>
+    </section>`;
   const log = el.querySelector('#ai-log');
   const input = el.querySelector('#ai-input');
 
@@ -65,6 +80,26 @@ export default async function aiView(el) {
       thinking.textContent = `Sorry — ${err.message}`;
     }
   }
+
+  const rf = el.querySelector('#reply-form');
+  rf.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = rf.querySelector('button');
+    btn.disabled = true;
+    try {
+      const res = await adminApi('/api/admin/ai/reply', { method: 'POST', body: { message: el.querySelector('#rp-msg').value, orderNumber: el.querySelector('#rp-no').value, email: el.querySelector('#rp-em').value } });
+      el.querySelector('#rp-text').value = res.reply;
+      el.querySelector('#rp-mode').textContent = res.mode === 'live' ? `(written by ${res.provider === 'openai' ? 'ChatGPT' : res.provider === 'gemini' ? 'Gemini' : 'Claude'})` : '(basic mode — add an AI key for better replies)';
+      el.querySelector('#rp-out').hidden = false;
+    } catch (err) {
+      toast(err.message, { error: true });
+    } finally {
+      btn.disabled = false;
+    }
+  });
+  el.querySelector('#rp-copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(el.querySelector('#rp-text').value); toast('Copied'); } catch { el.querySelector('#rp-text').select(); }
+  });
 
   say('bot', text);
   el.querySelector('#ai-examples').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) send(b.textContent === 'Today’s summary' ? 'summary' : b.textContent); });

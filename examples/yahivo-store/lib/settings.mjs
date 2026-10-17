@@ -44,6 +44,7 @@ const validators = {
         facebook: host(social.facebook, ['www.facebook.com', 'facebook.com', 'm.facebook.com', 'fb.com'], 'social.facebook', 'Facebook'),
         instagram: host(social.instagram, ['www.instagram.com', 'instagram.com'], 'social.instagram', 'Instagram'),
         tiktok: host(social.tiktok, ['www.tiktok.com', 'tiktok.com'], 'social.tiktok', 'TikTok'),
+        shopify: ck.url('social.shopify', social.shopify, 'Main store link'),
       },
     };
   },

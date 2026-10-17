@@ -1,6 +1,6 @@
 // Client router + shell (header, footer, banner, cart badge).
 import { cart, getSettings } from './api.js';
-import { contactButtons, errorState, esc, loading, setLocale, socialLinks } from './ui.js';
+import { contactButtons, errorState, esc, loading, setLocale, socialLinks, topBarLinks } from './ui.js';
 import { initAnalytics } from './analytics.js';
 import { initChat } from './chat.js';
 
@@ -133,6 +133,11 @@ async function initShell() {
       const banner = document.getElementById('sample-banner');
       banner.innerHTML = 'Preview store: products, prices and stock shown are <strong>sample data</strong>, not real YAHIVO items.';
       banner.hidden = false;
+    }
+    const top = topBarLinks(s.contact, s.social);
+    if (top) {
+      document.getElementById('topbar-links').innerHTML = top;
+      document.getElementById('topbar').hidden = false;
     }
     document.getElementById('footer-social').innerHTML = contactButtons(s.contact) + socialLinks(s.social);
     document.getElementById('footer-legal').textContent = `© ${new Date().getFullYear()} ${s.brand}. Prices in ${s.currency}.`;

@@ -270,6 +270,23 @@ export function createApp({ store = new Store(), env = process.env, fetchImpl = 
       const live = (await assistantMode(env)) === 'live';
       return sendJson(res, 200, { mode: live ? 'live' : 'basic', reply: out.reply, actions: out.actions.map((a) => ({ action: a, ...checkAction(a, c) })) });
     }
+    // Reply helper: drafts an answer to a customer's message from any channel (TikTok, Instagram…).
+    // Read-only: it can look up an order but never cancels or records anything.
+    if (p === '/api/admin/ai/reply' && m === 'POST') {
+      limit(req, 'admin-ai', 30, 60_000);
+      const b = await readJson(req, 16 * 1024);
+      const message = String(b?.message ?? '').trim().slice(0, 1000);
+      if (!message) throw new HttpError(400, 'Paste the customer’s message.');
+      const extra = [b?.orderNumber, b?.email].map((x) => String(x ?? '').trim().slice(0, 254)).filter(Boolean).join(' ');
+      const lookupOrder = (number, email) => {
+        const order = findForTracking(store, number, email);
+        return order ? { status: 'found', order: publicOrder(store, order) } : { status: 'not_found' };
+      };
+      const c = ctx();
+      const out = await answer([{ role: 'user', content: extra ? `${message}\n(${extra})` : message }], { ...c, fetchImpl, lookupOrder }, env);
+      if (out.error) throw new HttpError(400, out.error);
+      return sendJson(res, 200, { reply: plainReply(out, siteUrl, c.settings.currency), mode: out.mode, provider: out.provider ?? null, notice: out.notice ?? null });
+    }
     if (p === '/api/admin/ai/apply' && m === 'POST') {
       const actions = (await readJson(req))?.actions;
       if (!Array.isArray(actions) || !actions.length || actions.length > 20) throw new HttpError(400, 'Nothing to apply.');

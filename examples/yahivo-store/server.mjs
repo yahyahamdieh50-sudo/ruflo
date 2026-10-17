@@ -26,6 +26,7 @@ import { routeMeta, robots, sitemap } from './lib/seo.mjs';
 import { clientIp, HttpError, readBody, readJson, securityHeaders, sendJson, serveStatic } from './lib/http.mjs';
 import { validateProduct, ValidationError } from './lib/validate.mjs';
 import { anonymiseOrder, ordersCsv } from './lib/fulfilment.mjs';
+import { catalogueProducts, importCatalogue } from './lib/catalogue-import.mjs';
 import { applyAction, checkAction, dailySummary, liveCommand, parseCommand, summaryText } from './lib/admin-ai.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -311,6 +312,11 @@ export function createApp({ store = new Store(), env = process.env, fetchImpl = 
       store.saveSettings(next);
       return sendJson(res, 200, { settings: next });
     }
+    if (p === '/api/admin/catalogue' && m === 'GET') {
+      const list = catalogueProducts();
+      return sendJson(res, 200, { total: list.length, published: list.filter((x) => x.published).length });
+    }
+    if (p === '/api/admin/catalogue/import' && m === 'POST') return sendJson(res, 200, importCatalogue(store));
     if (p === '/api/admin/products' && m === 'GET') {
       return sendJson(res, 200, { products: store.listProducts({ includeUnpublished: true }) });
     }

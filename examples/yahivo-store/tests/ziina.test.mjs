@@ -92,28 +92,24 @@ test('Ziina failure cancels the order and releases stock', async () => {
 
 const crownStock = (list) => list.find((p) => p.slug === 'yahivo-crown-graphic-oversized-hoodie').colors[0].stock;
 
-test('real YAHIVO catalogue: Shopify details, owner sizes/stock, hidden third-party designs', async () => {
+test('real YAHIVO catalogue: all Shopify products, full-size photos, hidden designs needing a licence', async () => {
   const store = new Store(':memory:', { seed: 'yahivo' });
   const all = store.listProducts({ includeUnpublished: true });
   const published = store.listProducts();
-  assert.equal(all.length, 23);
+  assert.equal(all.length, 31, 'every Shopify product');
   assert.equal(published.length, 14);
-  assert.ok(published.every((p) => p.sizes.join() === 'S,M,L,XL' && !p.sample), 'owner-confirmed sizes on live hoodies');
-  assert.ok(all.filter((p) => !p.published).every((p) => p.sizes.length === 0), 'hidden designs untouched');
-  assert.deepEqual(crownStock(published), { S: 10, M: 10, L: 10, XL: 10 }, 'owner stock: 10 per size');
+  assert.ok(all.every((p) => p.images.length && p.images.every((i) => i.src.startsWith('https://cdn.shopify.com/'))), 'Shopify photos');
+  assert.ok(all.every((p) => p.colors.every((c) => Object.values(c.stock).every((n) => n === 10))), 'owner stock: 10 per size');
+  assert.ok(published.every((p) => p.sizes.includes('2XL') && !p.sample), '2XL from Shopify');
   assert.equal(store.getSettings().contact.whatsapp, '+971 52 586 6612');
-  assert.ok(!published.some((p) => /toyota|bmw|drop-shoulder-hoodie-[24]|tonal|portrait/.test(p.slug)), 'designs without confirmed rights stay hidden');
-  assert.ok(['essential-heavyweight-drop-shoulder-hoodie-3', 'essential-heavyweight-drop-shoulder-hoodie', 'oversize-fleeced-hoodie-tom-jerry'].every((s) => published.some((p) => p.slug === s && p.images.length)), 'owner-confirmed designs published with photos');
-  const crown = published.find((p) => p.slug === 'yahivo-crown-graphic-oversized-hoodie');
+  assert.ok(!published.some((p) => /t-shirt|boxy|streetwear|mock-neck|tonal|portrait|oversize-fleeced-hoodie-(6|7|11)$|drop-shoulder-hoodie-[2467]$/i.test(`${p.slug} ${p.name}`)), 'unchecked or licensed designs stay hidden');
+  assert.ok(published.some((p) => p.name.endsWith('Just Do It')), 'owner-confirmed design published');
+  const crown = published.find((p) => p.slug === 'oversize-fleeced-hoodie-1');
+  assert.equal(crown.name, 'YAHIVO Crown Graphic Oversized Hoodie — Klein Blue');
   assert.equal(crown.price, 153.52);
-  assert.deepEqual(crown.colors.map((c) => c.name), ['Black', 'Klein Blue', 'White']);
-  assert.ok(crown.images.every((i) => i.color));
-  assert.ok(published.every((p) => p.description && p.material && p.fit), 'descriptions/material/fit imported from Shopify');
-  const coffee = published.find((p) => p.slug === 'yahivo-coffee-graphic-oversized-hoodie');
-  assert.equal(coffee.colors[0].name, 'Light Gray');
-  assert.deepEqual(coffee.colors[0].stock, { S: 10, M: 10, L: 10, XL: 10 }, 'available on Shopify → owner stock rule');
-  const script = published.find((p) => p.slug === 'yahivo-script-oversized-fleece-hoodie-pink-apricot');
-  assert.deepEqual(script.colors.map((c) => c.name), ['Pink', 'Apricot']);
+  assert.ok(published.every((p) => p.description && p.material && p.fit), 'descriptions/material/fit');
+  const script = published.find((p) => p.slug === 'oversize-fleeced-hoodie-5');
+  assert.deepEqual(script.colors.map((c) => c.name).sort(), ['Apricot', 'Pink']);
   const settings = store.getSettings();
   assert.equal(settings.contact.email, 'yahia.h2026@hotmail.com');
   assert.ok(settings.policies.shipping && settings.policies.returns, 'policies from Shopify');
@@ -128,7 +124,7 @@ test('real store settings: cash-on-delivery orders with Dubai AED 15 / rest of U
   const settings = store.getSettings();
   const methods = paymentMethods(settings, {});
   assert.deepEqual(methods.map((m) => m.id), ['manual'], 'cash on delivery only');
-  const items = [{ slug: 'yahivo-crown-graphic-oversized-hoodie', color: 'Klein Blue', size: 'L', qty: 2 }];
+  const items = [{ slug: 'oversize-fleeced-hoodie-1', color: 'Klein Blue', size: 'L', qty: 2 }];
   const ctx = { settings, products: store.listProducts(), methods };
   const dubai = quote({ items, country: 'United Arab Emirates', region: 'Dubai' }, ctx);
   assert.deepEqual([dubai.totals.items, dubai.totals.delivery, dubai.totals.tax, dubai.totals.total], [307.04, 15, 0, 322.04]);
@@ -140,7 +136,22 @@ test('real store settings: cash-on-delivery orders with Dubai AED 15 / rest of U
   const order = store.getOrder(placed.id);
   assert.equal(order.paymentStatus, 'awaiting_payment');
   assert.equal(order.totals.total, 322.04);
-  const coffee = quote({ items: [{ slug: 'yahivo-coffee-graphic-oversized-hoodie', color: 'Light Gray', size: 'M', qty: 1 }] }, ctx);
-  assert.deepEqual(coffee.issues, [], 'available again, as on Shopify');
+  const coffee = quote({ items: [{ slug: 'essential-heavyweight-drop-shoulder-hoodie', color: 'Light Gray', size: '2XL', qty: 1 }] }, ctx);
+  assert.deepEqual(coffee.issues, [], 'new 2XL size can be ordered');
+  store.close();
+});
+
+test('admin import loads the Shopify catalogue into a running store, keeping stock and hiding old products', async () => {
+  const { importCatalogue } = await import('../lib/catalogue-import.mjs');
+  const store = new Store(':memory:', { seed: 'sample' });
+  const sampleCount = store.listProducts().length;
+  assert.ok(sampleCount > 0);
+  const first = importCatalogue(store);
+  assert.deepEqual(first, { added: 31, updated: 0, hidden: sampleCount, published: 14 });
+  assert.equal(store.listProducts().length, 14, 'only catalogue products shown');
+  store.transaction(() => store.adjustStock('oversize-fleeced-hoodie-1', 'Klein Blue', 'M', -3));
+  const again = importCatalogue(store);
+  assert.deepEqual([again.added, again.updated, again.hidden], [0, 31, 0]);
+  assert.equal(store.getProduct('oversize-fleeced-hoodie-1').colors[0].stock.M, 7, 'recorded stock kept');
   store.close();
 });

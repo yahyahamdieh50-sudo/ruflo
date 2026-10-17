@@ -88,19 +88,20 @@ The store is set up with **iMile** as its cash-on-delivery courier. iMile collec
 4. The customer's order page shows the courier, tracking number and tracking link.
 5. When the courier confirms delivery, set **Delivered**.
 
-## Your catalogue (imported 2026-10-14)
+## Your catalogue (from Shopify, 2026-10-17)
 
-`data/seed/products.yahivo.json` holds your hoodies. Names, AED prices, colours, descriptions, materials, fit, care and measurements were read (read-only) from your Shopify store. Nothing was changed on Shopify. A new database starts with this catalogue (set `YAHIVO_SEED=sample` for test data). If you already ran the store with sample data, delete `data/yahivo.db` once to reload it.
+`data/seed/products.yahivo.json` holds **all 31 products** from your Shopify store, read-only (nothing was changed on Shopify). It includes names, AED prices, colours, sizes (S–2XL, and 3XL where Shopify has it), descriptions, and the **full-size Shopify photos**, which load from Shopify's image CDN.
 
-- **Published (11):** YAHIVO Crown Graphic (Black / Klein Blue / White), "Mine" and "Yours" couples hoodies, Pink Ride, Script Pink / Apricot, Oversize Fleeced Hoodie ×2 (YAHIVO logo) and Brooklyn Varsity, plus Arabic Typography, Coffee Graphic and Logo Oversized Fleece. These last three looked sold out in the recording, but Shopify lists them as available, so they are on sale with the same 10-per-size stock.
-- **Published with your photos (3), rights confirmed by you on 2026-10-14:** Peace (Light Green, AED 183.61), Just Do It (Light Gray, AED 172.26) and Tom and Jerry (White and Black, AED 153.52). Keep your licence paperwork for these on file.
-- **Not added:** the white Maserati hoodie isn't in your Shopify store or the recording, so its price is unknown. Add it in Admin → Products once you've set a price. The Spider-Man piece is a T-shirt, and this store only sells hoodies.
-- **Still hidden (9), until you confirm you hold the rights:** these designs use third-party brands or characters (Nike, adidas, Toyota, BMW, Maserati, Pink Panther, Bugs Bunny, Tom & Jerry, the Simpsons, Joker) or a real person's portrait. Selling them without a licence is a legal risk, and payment providers generally prohibit it. Admin → Products → tick **Published** to show one.
-- **Not imported:** the 5 T-shirts (Essential Cotton ×3, Rebel Rabbit, Unisex Oversized) because this store sells hoodies only.
-- **Sizes:** S, M, L, XL on all live hoodies (confirmed by you). **Stock:** 10 per size for every available colour (from you). It goes down automatically with each order and back up if you cancel. Adjust it any time in Admin → Products. Shopify also offers 2XL (and 3XL on some designs). Add those in Admin → Products if you stock them.
-- **From Shopify:** descriptions, fabric and weight (350 gsm fleece, 380 gsm and 430 gsm heavyweight), fit, care, and measurements. Coffee Graphic is Light Gray, and Script comes in two colours, Pink and Apricot. Shopify's delivery estimate ("7–9 business days, including production") was left out because it describes print-on-demand. Add your own estimate per zone if you want one.
-- **Photos** are still cropped from the recording (about 400px). Shopify's image CDN is blocked in the build environment, so the 1400px originals could not be downloaded. Upload them in Admin → Products. Brooklyn Varsity, Logo Oversized Fleece and Script Apricot have no photo and show an illustration.
-- **Logo:** your logo is used in the header, footer, favicon and social share image (`public/img/logo-*.png`).
+- **Load it into the running store:** Admin → Products → **Import Shopify catalogue**. This adds new products and refreshes existing ones (photos, sizes, text, price, visibility) while keeping stock you already recorded. Products that aren't in the catalogue are hidden, not deleted. A brand-new database loads the catalogue automatically.
+- **Shown (14):** the YAHIVO designs: Small Logo, Large Logo and Logo hoodies; Crown Graphic in Klein Blue, White and Black; Script; Pink Ride; Brooklyn Varsity; "Mine" and "Yours"; Coffee Graphic; Arabic Typography; and Just Do It (rights confirmed by you on 2026-10-14).
+- **Hidden (17), until you check each one and tick *Published*:**
+  - Products with generic Shopify titles whose design couldn't be checked here (Oversize Fleeced Hoodie ×3, Essential Heavyweight Drop-Shoulder Hoodie ×3).
+  - The T-shirts, the boxy, streetwear and mock-neck pieces, and the Tonal Print hoodie.
+  - Arabic Quote Portrait, which shows a real person.
+  - The Peace and Tom and Jerry designs you confirmed earlier are among the generic-titled hoodies; publish them again after checking the photo.
+  - Designs using other brands or characters (Nike, adidas, BMW, Toyota, Pink Panther, Looney Tunes and so on) need a licence before you sell them. Selling them without one is a legal risk, and payment providers generally prohibit it.
+- **Stock:** 10 per size and colour, as you set. Adjust it any time in Admin → Products.
+- **Mock-neck sweatshirt:** Shopify prices XL lower (AED 159.62) than S–L (AED 168.69). This store has one price per product, so it uses AED 168.69. Change it in the admin if you prefer.
 
 ## Payments
 

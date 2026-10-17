@@ -127,7 +127,9 @@ test('real store settings: cash-on-delivery orders with Dubai AED 15 / rest of U
   const items = [{ slug: 'oversize-fleeced-hoodie-1', color: 'Klein Blue', size: 'L', qty: 2 }];
   const ctx = { settings, products: store.listProducts(), methods };
   const dubai = quote({ items, country: 'United Arab Emirates', region: 'Dubai' }, ctx);
-  assert.deepEqual([dubai.totals.items, dubai.totals.delivery, dubai.totals.tax, dubai.totals.total], [307.04, 15, 0, 322.04]);
+  assert.deepEqual([dubai.totals.items, dubai.totals.delivery, dubai.totals.tax, dubai.totals.total], [307.04, 15, 15.34, 322.04], 'UAE VAT 5% included: same total, VAT shown');
+  assert.equal(dubai.totals.taxLabel, 'VAT (5%)');
+  assert.equal(dubai.totals.taxIncluded, true);
   const sharjah = quote({ items, country: 'United Arab Emirates', region: 'Sharjah' }, ctx);
   assert.equal(sharjah.totals.delivery, 25);
   assert.deepEqual(settings.delivery.couriers.map((c) => c.id), ['imile'], 'iMile is the cash-on-delivery courier');
@@ -154,4 +156,14 @@ test('admin import loads the Shopify catalogue into a running store, keeping sto
   assert.deepEqual([again.added, again.updated, again.hidden], [0, 31, 0]);
   assert.equal(store.getProduct('oversize-fleeced-hoodie-1').colors[0].stock.M, 7, 'recorded stock kept');
   store.close();
+});
+
+test('admin can apply the recommended UAE VAT and policies to a running store', async () => {
+  const post = (path) => fetch(base + path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-YH-Admin': '1', Cookie: cookie }, body: '{}' }).then((r) => r.json());
+  const tax = (await post('/api/admin/settings/tax/recommended')).settings.tax;
+  assert.deepEqual([tax.enabled, tax.name, tax.rate, tax.pricesIncludeTax], [true, 'VAT', 5, true]);
+  const pol = (await post('/api/admin/settings/policies/recommended')).settings.policies;
+  assert.match(pol.returns, /within 7 days of delivery/);
+  assert.match(pol.shipping, /include 5% VAT/);
+  assert.equal((await fetch(`${base}/api/admin/settings/tax/recommended`, { method: 'POST' })).status, 401, 'admin only');
 });

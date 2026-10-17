@@ -164,11 +164,25 @@ const screens = {
   }),
 };
 
+const RECOMMENDED = {
+  tax: 'UAE VAT 5%, included in your prices (as on your Shopify store), so customers pay the same total and checkout shows the VAT inside it. Delivery and packing fees are treated as including VAT too. Add your TRN once you are VAT-registered.',
+  policies: 'Clear shipping and returns policies for the UAE: delivery fees by emirate, VAT, card or cash on delivery, iMile tracking, 7-day returns and size exchanges, refunds and how to start a return with the AI assistant.',
+};
+
 export default async function settingsView(el, name) {
   const [{ settings }, overview] = await Promise.all([adminApi('/api/admin/settings'), name === 'payments' ? adminApi('/api/admin/overview') : null]);
   const screen = screens[name](settings, overview?.integrations ?? {});
   el.innerHTML = `<h1>${esc(screen.title)}</h1><div class="panel-note">${esc(screen.note)}</div>
+    ${RECOMMENDED[name] ? `<div class="panel"><p>${esc(RECOMMENDED[name])}</p><button type="button" class="btn btn-ghost" id="use-rec">Use the YAHIVO recommended ${name === 'tax' ? 'VAT setup' : 'policies'}</button></div>` : ''}
     <form id="sf" novalidate>${screen.html}<div class="actions"><button class="btn" type="submit">Save</button></div></form>`;
+  el.querySelector('#use-rec')?.addEventListener('click', async () => {
+    if (!confirm('Replace the current values with the recommended ones? You can still edit them afterwards.')) return;
+    try {
+      await adminApi(`/api/admin/settings/${name}/recommended`, { method: 'POST', body: {} });
+      toast('Saved. Check the text below and edit anything that does not match how you work.');
+      settingsView(el, name);
+    } catch (err) { toast(err.message, { error: true }); }
+  });
   const form = el.querySelector('#sf');
   bindRepeaters(form);
   form.addEventListener('submit', async (e) => {

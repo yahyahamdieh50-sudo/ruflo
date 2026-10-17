@@ -90,3 +90,5 @@ body.admin h1, body.admin h2, body.admin h3 { font-weight: 700; }
 .ai-form { display: flex; gap: 8px; position: sticky; bottom: 0; background: #f5f4f0; padding: 10px 0; }
 .ai-form input { flex: 1; min-width: 0; }
 .pre { white-space: pre-line; }
+.ai-reply { margin-top: 28px; }
+.ai-reply textarea { width: 100%; }

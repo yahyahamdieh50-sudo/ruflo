@@ -91,6 +91,7 @@ export function toast(message, { link, error = false, timeout = 3500 } = {}) {
 export const ICONS = {
   instagram: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8.2a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4zM17.3 5.5a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4zM12 2c-2.7 0-3 0-4.1.1-1 0-1.8.2-2.4.5-.7.3-1.2.6-1.8 1.2S2.9 5 2.6 5.6c-.3.6-.4 1.4-.5 2.4C2 9 2 9.3 2 12s0 3 .1 4.1c0 1 .2 1.8.5 2.4.3.7.6 1.2 1.2 1.8s1.1.9 1.8 1.2c.6.3 1.4.4 2.4.5 1 .1 1.4.1 4.1.1s3 0 4.1-.1c1 0 1.8-.2 2.4-.5.7-.3 1.2-.6 1.8-1.2s.9-1.1 1.2-1.8c.3-.6.4-1.4.5-2.4.1-1 .1-1.4.1-4.1s0-3-.1-4.1c0-1-.2-1.8-.5-2.4-.3-.7-.6-1.2-1.2-1.8S19 2.9 18.4 2.6c-.6-.3-1.4-.4-2.4-.5C15 2 14.7 2 12 2zm0 1.8c2.7 0 3 0 4 .1.9 0 1.5.2 1.8.3.5.2.8.4 1.1.7.4.4.6.7.7 1.1.1.3.3.9.3 1.8.1 1 .1 1.4.1 4s0 3-.1 4c0 .9-.2 1.5-.3 1.8-.2.5-.4.8-.7 1.1-.4.4-.7.6-1.1.7-.3.1-.9.3-1.8.3-1 .1-1.4.1-4 .1s-3 0-4-.1c-.9 0-1.5-.2-1.8-.3-.5-.2-.8-.4-1.1-.7-.4-.4-.6-.7-.7-1.1-.1-.3-.3-.9-.3-1.8-.1-1-.1-1.4-.1-4s0-3 .1-4c0-.9.2-1.5.3-1.8.2-.5.4-.8.7-1.1.4-.4.7-.6 1.1-.7.3-.1.9-.3 1.8-.3 1-.1 1.4-.1 4-.1z"/></svg>',
   facebook: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 22v-8.2h2.8l.4-3.2h-3.2V8.5c0-.9.3-1.6 1.6-1.6h1.7V4.1c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3v2.4H7.3v3.2h2.8V22z"/></svg>',
+  shopify: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l1 14H5zm3 0V6a3 3 0 0 1 6 0v1h-1.8V6a1.2 1.2 0 0 0-2.4 0v1z"/></svg>',
   tiktok: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.6 2h-3.3v13.4a2.8 2.8 0 1 1-2-2.7V9.3a6.1 6.1 0 1 0 5.3 6.1V8.6a7.7 7.7 0 0 0 4.4 1.4V6.7a4.4 4.4 0 0 1-4.4-4.4z"/></svg>',
 };
 
@@ -108,9 +109,21 @@ export function contactButtons(contact, { message } = {}) {
   return out.join('');
 }
 
+const SOCIAL_LABELS = { shopify: 'Main store', instagram: 'Instagram', tiktok: 'TikTok', facebook: 'Facebook' };
+
 export function socialLinks(social) {
-  return ['instagram', 'tiktok', 'facebook'].filter((k) => social?.[k])
-    .map((k) => `<a href="${esc(social[k])}" target="_blank" rel="noopener noreferrer">${ICONS[k]}<span>${k === 'tiktok' ? 'TikTok' : k[0].toUpperCase() + k.slice(1)}</span></a>`).join('');
+  return ['shopify', 'instagram', 'tiktok', 'facebook'].filter((k) => social?.[k])
+    .map((k) => `<a href="${esc(social[k])}" target="_blank" rel="noopener noreferrer">${ICONS[k]}<span>${SOCIAL_LABELS[k]}</span></a>`).join('');
+}
+
+/** Compact icon links for the bar above the header: WhatsApp first, then the store's profiles. */
+export function topBarLinks(contact, social) {
+  const out = [];
+  if (contact?.whatsapp) out.push(`<a href="https://wa.me/${esc(contact.whatsapp.replace(/\D/g, ''))}" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">${WA_ICON}<span>WhatsApp</span></a>`);
+  for (const k of ['instagram', 'tiktok', 'facebook', 'shopify']) {
+    if (social?.[k]) out.push(`<a href="${esc(social[k])}" target="_blank" rel="noopener noreferrer" aria-label="${SOCIAL_LABELS[k]}">${ICONS[k]}<span>${SOCIAL_LABELS[k]}</span></a>`);
+  }
+  return out.join('');
 }
 
 export function loading(label = 'Loading…') {

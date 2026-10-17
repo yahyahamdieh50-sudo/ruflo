@@ -117,12 +117,14 @@ const screens = {
         <div class="field"><label for="sfb">Facebook profile URL</label><input id="sfb" name="facebook" type="url" placeholder="https://www.facebook.com/yourpage" value="${esc(s.social.facebook ?? '')}"></div>
         <div class="field"><label for="sig">Instagram profile URL</label><input id="sig" name="instagram" type="url" placeholder="https://www.instagram.com/yourhandle" value="${esc(s.social.instagram ?? '')}"></div>
         <div class="field"><label for="stt">TikTok profile URL</label><input id="stt" name="tiktok" type="url" placeholder="https://www.tiktok.com/@yourhandle" value="${esc(s.social.tiktok ?? '')}"></div>
+        <div class="field"><label for="ssh">Main store link (your Shopify site)</label><input id="ssh" name="shopify" type="url" placeholder="https://yahivo.com/" value="${esc(s.social.shopify ?? '')}"></div>
+        <p class="hint">These links, and your WhatsApp number, appear in the bar at the top of every page and in the footer.</p>
       </section>`,
     read: (f) => ({
       brand: v(f, 'brand'), logo: v(f, 'logo'), logoLight: v(f, 'logoLight'), ogImage: v(f, 'ogImage'),
       hero: { eyebrow: v(f, 'eyebrow'), headline: v(f, 'headline'), subhead: v(f, 'subhead') },
       contact: { email: v(f, 'email'), whatsapp: v(f, 'whatsapp'), phone: v(f, 'phone'), hours: v(f, 'hours'), address: v(f, 'address') },
-      social: { facebook: v(f, 'facebook'), instagram: v(f, 'instagram'), tiktok: v(f, 'tiktok') },
+      social: { facebook: v(f, 'facebook'), instagram: v(f, 'instagram'), tiktok: v(f, 'tiktok'), shopify: v(f, 'shopify') },
     }),
   }),
   policies: (s) => ({

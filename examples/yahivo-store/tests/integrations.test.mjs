@@ -176,3 +176,24 @@ test('n8n: return request over Instagram for a delivered order, visible to admin
   assert.ok(admin.events.some((e) => e.type === 'return'));
   assert.match((await call('/api/admin/summary', { admin: true })).json.text, /Return requests to arrange \(1\)/);
 });
+
+test('admin reply helper drafts a reply (read-only) with full links', async () => {
+  assert.equal((await call('/api/admin/ai/reply', { method: 'POST', body: { message: 'hi' } })).status, 401, 'admin only');
+  const r = await call('/api/admin/ai/reply', { method: 'POST', admin: true, body: { message: 'How much is delivery to Dubai?' } });
+  assert.equal(r.status, 200);
+  assert.match(r.json.reply, /Dubai/);
+  assert.match(r.json.reply, /https:\/\/shop\.example\/shipping-returns/);
+  const order = await placeOrder();
+  const draft = await call('/api/admin/ai/reply', { method: 'POST', admin: true, body: { message: `CANCEL ${order.number}`, orderNumber: order.number, email: customer.email } });
+  assert.equal(draft.status, 200);
+  assert.equal((await call(`/api/orders/${order.token}`)).json.order.status, 'received', 'drafting a reply never changes the order');
+});
+
+test('store settings accept a main-store (Shopify) link shown with the social links', async () => {
+  const { settings } = (await call('/api/admin/settings', { admin: true })).json;
+  const bad = await call('/api/admin/settings/store', { method: 'PUT', admin: true, body: { ...settings, social: { ...settings.social, shopify: 'http://yahivo.com' } } });
+  assert.equal(bad.status, 422);
+  const ok = await call('/api/admin/settings/store', { method: 'PUT', admin: true, body: { ...settings, social: { ...settings.social, shopify: 'https://yahivo.com/' } } });
+  assert.equal(ok.status, 200);
+  assert.equal((await call('/api/settings')).json.social.shopify, 'https://yahivo.com/');
+});

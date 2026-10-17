@@ -382,3 +382,11 @@ body.has-sticky-atc .chat-launcher { bottom: calc(84px + env(safe-area-inset-bot
 @media (min-width: 768px) { .cat-card .cat-photo { width: 124px; height: 124px; } }
 .order-contact { margin-top: 8px; }
 .order-contact a { color: var(--fg); }
+
+/* Social / contact bar above the header */
+.topbar { background: #000; border-bottom: 1px solid var(--line); }
+.topbar-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px 18px; padding-block: 6px; }
+.topbar a { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; text-decoration: none; color: var(--muted); transition: color .2s; }
+.topbar a:hover { color: var(--fg); }
+.topbar svg { width: 15px; height: 15px; fill: currentColor; }
+@media (max-width: 520px) { .topbar a span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } .topbar-row { gap: 4px 22px; } .topbar svg { width: 18px; height: 18px; } }

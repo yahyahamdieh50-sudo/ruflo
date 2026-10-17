@@ -44,9 +44,12 @@ export function clientIp(req) {
   return req.socket.remoteAddress ?? 'unknown';
 }
 
-export function securityHeaders(res, { analytics = false } = {}) {
-  const ga = analytics ? ' https://www.googletagmanager.com' : '';
-  const gaConnect = analytics ? ' https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com' : '';
+/** analytics / meta / tiktok: allow that tracker's script and beacon hosts (only when its ID is set). */
+export function securityHeaders(res, { analytics = false, meta = false, tiktok = false } = {}) {
+  const ga = (analytics ? ' https://www.googletagmanager.com' : '') + (meta ? ' https://connect.facebook.net' : '') + (tiktok ? ' https://analytics.tiktok.com' : '');
+  const gaConnect = (analytics ? ' https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com' : '')
+    + (meta ? ' https://www.facebook.com https://connect.facebook.net' : '')
+    + (tiktok ? ' https://analytics.tiktok.com https://*.tiktok.com' : '');
   res.setHeader('Content-Security-Policy', [
     "default-src 'self'",
     `script-src 'self'${ga}`,

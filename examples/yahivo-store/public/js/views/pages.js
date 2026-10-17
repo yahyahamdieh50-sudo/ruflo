@@ -5,6 +5,13 @@ import { deliveryTable, sizeTable } from './shared.js';
 const contactLink = '<a href="/contact" data-link>contact us</a>';
 const missing = (what) => `<div class="notice notice-warn"><p>${what} hasn’t been published yet. Please ${contactLink} with any questions.</p></div>`;
 
+function trackerText(a) {
+  const used = [a.ga4MeasurementId && 'Google Analytics (to see how the site is used)', a.metaPixelId && 'the Meta Pixel (Facebook / Instagram ads)', a.tiktokPixelId && 'the TikTok Pixel (TikTok ads)'].filter(Boolean);
+  if (!used.length) return 'No third-party analytics or advertising trackers are currently enabled.';
+  const ads = a.metaPixelId || a.tiktokPixelId ? ' Advertising pixels let those platforms measure our ads and show them to people likely to be interested; they may set cookies and share this data with Meta or TikTok under their own privacy policies.' : '';
+  return `We use ${used.join(', ')}. They receive pages viewed, products viewed or added to the cart, checkouts started and completed orders (order value and product IDs — not your name, address or payment details).${ads}`;
+}
+
 function generatedFaqs(s) {
   const out = [];
   out.push({ q: 'Who answers the chat?', a: `YAHIVO’s AI assistant answers instantly, any time. It uses the store’s own information and can check your order status with your order number and checkout email. It can’t change or cancel orders; the YAHIVO team handles those through the Contact page.`, link: ['/contact', 'Contact'] });
@@ -48,7 +55,7 @@ const pages = {
     <h2>Payments</h2><p>${s.paymentMethods.some((m) => m.id === 'stripe') ? 'Card payments are processed by Stripe on Stripe’s secure page. We never see or store your full card number.' : 'This website does not collect or store card details.'}</p>
     <h2>Your cart and preferences</h2><p>Your cart is stored in your own browser (local storage) so it survives page reloads. It is not sent to us until you check out.</p>
     <h2>Shopping assistant</h2><p>Questions you type into the assistant are sent to our server to generate an answer${s.aiMode === 'live' ? ', and to our AI provider (Anthropic) to produce the reply' : ''}. Please don’t type card numbers or passwords into the chat.</p>
-    <h2>Analytics</h2><p>${s.analytics.ga4MeasurementId ? 'We use Google Analytics to understand how the site is used (pages viewed, products added to cart).' : 'No third-party analytics are currently enabled.'}</p>
+    <h2>Analytics and advertising</h2><p>${trackerText(s.analytics)}</p>
     <h2>Couriers</h2><p>We share your name, phone number and address with the courier delivering your order.</p>
     <h2>Your choices</h2><p>To ask about, correct or delete your information, contact ${s.policies.privacyContactEmail ? `<a href="mailto:${esc(s.policies.privacyContactEmail)}">${esc(s.policies.privacyContactEmail)}</a>` : 'us via the Contact page'}.</p>`],
 };

@@ -145,7 +145,11 @@ const validators = {
     }));
   },
   analytics(v, ck) {
-    return { ga4MeasurementId: ck.text('ga4MeasurementId', v.ga4MeasurementId, 'GA4 Measurement ID', { max: 20, pattern: /^G-[A-Z0-9]{4,15}$/ }) };
+    return {
+      ga4MeasurementId: ck.text('ga4MeasurementId', v.ga4MeasurementId, 'GA4 Measurement ID', { max: 20, pattern: /^G-[A-Z0-9]{4,15}$/ }),
+      metaPixelId: ck.text('metaPixelId', v.metaPixelId, 'Meta Pixel ID', { max: 20, pattern: /^\d{10,20}$/ }),
+      tiktokPixelId: ck.text('tiktokPixelId', v.tiktokPixelId, 'TikTok Pixel ID', { max: 30, pattern: /^[A-Z0-9]{15,30}$/i }),
+    };
   },
 };
 
@@ -225,6 +229,7 @@ export function launchChecklist(settings, products, { stripe, aiLive, adminPassw
     item(settings.sizeGuide.rows.length, 'Size guide measurements', 'Admin → Size guide.'),
     item(aiLive, 'Live AI assistant (currently demo mode)', 'Set ANTHROPIC_API_KEY env var (see README).', 'recommended'),
     item(settings.analytics.ga4MeasurementId, 'Analytics measurement ID', 'Admin → Analytics.', 'optional'),
+    item(settings.analytics.metaPixelId || settings.analytics.tiktokPixelId, 'Ads pixels (Meta / TikTok)', 'Admin → Analytics: paste your Meta Pixel ID and/or TikTok Pixel ID so Instagram, Facebook and TikTok ads can measure sales.', 'recommended'),
     item(adminPasswordSet, 'Strong admin password', 'Set ADMIN_PASSWORD (12+ characters).'),
   ];
 }

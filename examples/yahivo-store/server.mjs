@@ -410,7 +410,8 @@ export function createApp({ store = new Store(), env = process.env, fetchImpl = 
 
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost');
-    securityHeaders(res, { analytics: Boolean(store.getSettings().analytics?.ga4MeasurementId) });
+    const a = store.getSettings().analytics ?? {};
+    securityHeaders(res, { analytics: Boolean(a.ga4MeasurementId), meta: Boolean(a.metaPixelId), tiktok: Boolean(a.tiktokPixelId) });
     try {
       if (url.pathname.startsWith('/api/')) await api(req, res, url);
       else if (req.method === 'GET' || req.method === 'HEAD') page(req, res, url);

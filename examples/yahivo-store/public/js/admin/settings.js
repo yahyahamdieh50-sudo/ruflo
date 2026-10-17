@@ -158,9 +158,13 @@ const screens = {
   }),
   analytics: (s) => ({
     title: 'Analytics',
-    note: 'Optional. When set, Google Analytics 4 loads on the storefront and receives view_item, add_to_cart, begin_checkout and purchase events. Update the privacy policy and cookie consent to match before launch.',
-    html: `<section class="panel"><div class="field"><label for="ga">GA4 Measurement ID</label><input id="ga" name="ga4MeasurementId" type="text" placeholder="G-XXXXXXX" value="${esc(s.analytics.ga4MeasurementId ?? '')}"></div></section>`,
-    read: (f) => ({ ga4MeasurementId: v(f, 'ga4MeasurementId') }),
+    note: 'Optional. Each tracker loads on the storefront only when its ID is set, and receives product views, add to cart, checkout and purchases (Meta: ViewContent, AddToCart, InitiateCheckout, Purchase; TikTok: ViewContent, AddToCart, InitiateCheckout, CompletePayment). The privacy page mentions each one you turn on; check cookie consent before launch.',
+    html: `<section class="panel">
+      <div class="field"><label for="ga">GA4 Measurement ID</label><input id="ga" name="ga4MeasurementId" type="text" placeholder="G-XXXXXXX" value="${esc(s.analytics.ga4MeasurementId ?? '')}"></div>
+      <div class="field"><label for="mp">Meta Pixel ID (Facebook / Instagram ads)</label><input id="mp" name="metaPixelId" type="text" inputmode="numeric" placeholder="123456789012345" value="${esc(s.analytics.metaPixelId ?? '')}"><p class="hint">Meta Events Manager → Data sources → your pixel → the number under its name.</p></div>
+      <div class="field"><label for="tt">TikTok Pixel ID</label><input id="tt" name="tiktokPixelId" type="text" placeholder="CXXXXXXXXXXXXXXXXXXX" value="${esc(s.analytics.tiktokPixelId ?? '')}"><p class="hint">TikTok Ads Manager → Tools → Events → Web events → your pixel → Pixel ID.</p></div>
+    </section>`,
+    read: (f) => ({ ga4MeasurementId: v(f, 'ga4MeasurementId'), metaPixelId: v(f, 'metaPixelId'), tiktokPixelId: v(f, 'tiktokPixelId') }),
   }),
 };
 

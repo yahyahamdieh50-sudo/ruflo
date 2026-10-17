@@ -135,7 +135,8 @@ export default async function checkout(main, ctx) {
     place.disabled = true;
     place.textContent = 'Placing order…';
     main.querySelector('#form-error').innerHTML = '';
-    track('begin_checkout', { currency: settings.currency, value: state.quote?.totals.total });
+    const tracked = cart.items().map((i) => ({ item_id: i.slug, item_variant: `${i.color}/${i.size}`, quantity: i.qty }));
+    track('begin_checkout', { currency: settings.currency, value: state.quote?.totals.total, items: tracked });
     try {
       const res = await api('/api/orders', {
         method: 'POST',
@@ -147,7 +148,7 @@ export default async function checkout(main, ctx) {
           expectedTotal: state.quote?.totals.total,
         },
       });
-      track('purchase', { transaction_id: res.number, currency: settings.currency, value: state.quote?.totals.total });
+      track('purchase', { transaction_id: res.number, currency: settings.currency, value: state.quote?.totals.total, items: tracked });
       cart.clear();
       if (res.redirectUrl) { location.href = res.redirectUrl; return; }
       navigate(`/order/${res.token}?placed=1`, { replace: true });

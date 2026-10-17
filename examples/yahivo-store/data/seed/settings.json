@@ -137,6 +137,8 @@
   },
   "faqs": [],
   "analytics": {
-    "ga4MeasurementId": null
+    "ga4MeasurementId": null,
+    "metaPixelId": null,
+    "tiktokPixelId": null
   }
 }

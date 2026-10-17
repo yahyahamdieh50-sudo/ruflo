@@ -272,3 +272,20 @@ test('customer data removal: only for finished orders, irreversible, keeps total
   const csv = (await call('/api/admin/orders.csv?q=YH-1001', { admin: true })).text;
   assert.doesNotMatch(csv, /Test Buyer|buyer@example\.com|Tower 1/);
 });
+
+test('ads pixels: IDs are validated and the CSP allows Meta/TikTok only when set', async () => {
+  const put = (body) => call('/api/admin/settings/analytics', { method: 'PUT', body, admin: true });
+  const csp = async () => (await call('/')).headers.get('content-security-policy');
+  assert.doesNotMatch(await csp(), /facebook|tiktok/);
+  assert.equal((await put({ metaPixelId: 'not-a-pixel' })).status, 422);
+  assert.equal((await put({ tiktokPixelId: 'short' })).status, 422);
+  assert.equal((await put({ metaPixelId: '123456789012345', tiktokPixelId: 'CABCDEFGHIJK1234567' })).status, 200);
+  const on = await csp();
+  assert.match(on, /script-src 'self' https:\/\/connect\.facebook\.net https:\/\/analytics\.tiktok\.com/);
+  assert.match(on, /connect-src [^;]*https:\/\/www\.facebook\.com/);
+  assert.doesNotMatch(on, /googletagmanager/);
+  const privacy = await call('/api/settings');
+  assert.equal(privacy.json.analytics.metaPixelId, '123456789012345');
+  assert.equal((await put({})).status, 200);
+  assert.doesNotMatch(await csp(), /facebook|tiktok/);
+});

@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; }
+html { scroll-behavior: smooth; }
+body { @apply bg-steel-50 text-steel-900 antialiased; font-family: "Segoe UI", system-ui, -apple-system, "Noto Sans Arabic", Tahoma, Arial, sans-serif; }
+:focus-visible { outline: 2px solid #00a0e4; outline-offset: 2px; }
+
+@layer components {
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded px-5 py-3 text-sm font-bold tracking-wide transition disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-primary { @apply btn bg-accent text-white hover:bg-accent-dark; }
+  .btn-navy { @apply btn bg-navy-800 text-white hover:bg-navy-900; }
+  .btn-outline { @apply btn border border-steel-300 bg-white text-navy-800 hover:bg-steel-100; }
+  .btn-ghost-light { @apply btn border border-white/40 text-white hover:bg-white/10; }
+  .btn-sm { @apply px-3 py-2 text-xs; }
+  .btn-danger { @apply btn bg-red-600 text-white hover:bg-red-700; }
+  .card { @apply rounded-lg border border-steel-200 bg-white shadow-sm; }
+  .input { @apply w-full rounded border border-steel-300 bg-white px-3 py-2.5 text-sm text-steel-900 placeholder:text-steel-400 focus:border-accent focus:outline-none; }
+  .label { @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-steel-600; }
+  .tag { @apply inline-flex items-center rounded-sm px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider; }
+  .container-x { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
+  .prose-lesson h2 { @apply mb-2 mt-6 text-xl font-bold text-navy-900; }
+  .prose-lesson h3 { @apply mb-2 mt-4 text-lg font-semibold text-navy-800; }
+  .prose-lesson p { @apply my-3 leading-7 text-steel-800; }
+  .prose-lesson ul { @apply my-3 list-disc space-y-1 ps-6; }
+  .prose-lesson ol { @apply my-3 list-decimal space-y-1 ps-6; }
+  .prose-lesson blockquote { @apply my-4 rounded border-s-4 border-accent bg-navy-50 px-4 py-3 text-sm text-navy-900; }
+  .prose-lesson table { @apply my-4 w-full text-sm; }
+  .prose-lesson th { @apply border border-steel-300 bg-steel-100 px-3 py-2 text-start font-semibold; }
+  .prose-lesson td { @apply border border-steel-200 px-3 py-2 align-top; }
+}
+
+.hero-bg {
+  background-color: #0a1a35;
+  background-image:
+    linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px),
+    linear-gradient(135deg, #0a1a35 0%, #0f2548 55%, #06101f 100%);
+  background-size: 40px 40px, 40px 40px, 100% 100%;
+}
+@media print {
+  header, footer, .no-print { display: none !important; }
+  body { background: white; }
+}

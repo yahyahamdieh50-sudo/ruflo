@@ -6,3 +6,4 @@ storage/private/*
 !storage/private/.gitkeep
 *.tsbuildinfo
 next-env.d.ts
+AGENTS.md

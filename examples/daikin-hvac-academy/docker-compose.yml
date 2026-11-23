@@ -1,0 +1,13 @@
+# Local PostgreSQL matching .env.example:  docker compose up -d
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: academy
+      POSTGRES_PASSWORD: academy
+      POSTGRES_DB: academy
+    ports: ["5432:5432"]
+    volumes: [academy-data:/var/lib/postgresql/data]
+volumes:
+  academy-data:

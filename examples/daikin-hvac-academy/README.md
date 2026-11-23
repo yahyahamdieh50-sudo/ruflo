@@ -37,20 +37,25 @@ Additionally smoke-tested in Chromium: gating per plan, secured media (401/403/2
    that cites nothing/unknown passages, and warns on model-specific or hazardous questions.
 5. The seeded sample course is flagged **Sample content** and has *not* been technically reviewed against manufacturer documents.
 
-## Quick start (local)
+## Quick start (local — Windows, macOS, Linux)
+
+Requirements: Node 20.9+ and a PostgreSQL database (easiest: Docker).
 
 ```bash
 cd examples/daikin-hvac-academy
 npm install
-cp .env.example .env            # set DATABASE_URL and APP_SECRET (openssl rand -base64 48)
-npm run db:migrate
-SEED_DEMO_USERS=true npm run db:seed   # dev only: free@/basic@/pro@/instructor@demo.test  (DemoPass-12345)
-npm run dev                     # http://localhost:3000   (admin = SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD)
-npm test && npm run typecheck
+docker compose up -d        # PostgreSQL on :5432 (skip if you already have Postgres; then edit DATABASE_URL)
 ```
 
-Next.js loads `.env`; the `db:*` scripts read the shell environment (`set -a; source .env; set +a`).
-Real-Postgres tests: `TEST_DATABASE_URL=postgres://… npm run test:pg` (**drops the `public` schema** — use a throwaway database).
+Copy `.env.example` to `.env` (Windows: `copy .env.example .env`) and set `APP_SECRET` to any random string of 32+ characters. Then:
+
+```bash
+npm run setup               # creates tables + seeds sample course, plans, admin and DEMO users (dev only)
+npm run dev                 # http://localhost:3000
+```
+
+Logins (dev only): `admin@example.com` / `ChangeMe-Now-123!` (from `.env`), `free@demo.test`, `basic@demo.test`, `pro@demo.test`, `instructor@demo.test` — password `DemoPass-12345`.
+Tests: `npm test`, `npm run typecheck`. Real-Postgres tests: `TEST_DATABASE_URL=postgres://… npm run test:pg` (**drops the `public` schema**).
 
 ## Deployment
 
